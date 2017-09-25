@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+	<head>
+		<meta charset="utf-8">
+		<title>使用Gradle命令行</title>
+	</head>
+	<body>
+		<ol>
+			<li>多任务执行</li>
+				<p>在一个build中，你可以通过在命令行中罗列每一项任务来实现执行多任务。其中的每一项任务仅会执行一次。</p>
+			<li>排除任务</li>
+				<p>-x命令行选项可以禁止任务执行。</p>
+			<li>任务失败继续执行</li>
+				<p>通常，一旦有任何任务失败，Gradle就会放弃执行，build失败。</p>
+				<p>当使用--continue时，Gradle不会因任务失败而停止，所有遇到的失败都会报告到前端。</p>
+			<li>任务名称缩写</li>
+				<p>在指定执行任务时，任务名不需要完全拼写，只要任务名称长度能够唯一区分任务即可。还可通过驼峰首字母指定任务。</p>
+			<li>选择build</li>
+				<p>Gradle执行时，会默认执行当前目录下的build文件。可通过-b选项来选择其他build文件，此时setting.gradle文件将无法使用。</p>
+			<li>强制任务执行</li>
+				<p>Gradle支持增量build，他们一般会根据输入输出是否变更来决定是否执行。</p>
+				<p>可通过使用--return-taks选项来强制Gradle执行所有任务。这同时会导致所有依赖任务执行。</p>
+			<li>获取build信息</li>
+				<p>列举projects: gradle -q projects</p>
+				<p>列举任务:gradle -q tasks (-all)</p>
+				<p>显示任务使用详情：gradle -q help --task xxx</p>
+		</ol>
+	</body>
+</html>

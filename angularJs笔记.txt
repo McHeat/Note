@@ -1,0 +1,27 @@
+$resource服务：
+用于同支持RESTful(表征状态转移)的服务端数据源进行交互。
+安装：
+	引用angular-resource.js文件，并在应用中作为依赖进行引用：
+	angular.module('myApp', [ngResource]);
+使用：
+	var res = $resource(url, {params});
+	GET方法：
+	get(params, successFn, errorFn)			//获取单个资源
+	query(params, successFn, errorFn)		//获取资源对象集合	
+	非GET方法：
+	save(params, payload, successFn, errorFn)		//POST请求，在服务器上生成新资源
+	delete(params, payload, successFn, errorFn)		//DELETE请求，在服务器上删除一个实体
+	remove(params, payload, successFn, errorFn)		//DELETE请求，同delete()
+$resource实例为异步：
+	首先创建一个空的数据引用，数据从服务器返回后自动填充
+	
+angular自定义指令：
+angular.module('myApp', [])
+	.directive('myDirective', function() {
+		return {
+			restrict: 'EACM',				//定义指令类型：E元素A属性C类M注释
+			replace: true,
+			scope: {myUrl: '@myUrl'}
+			template: '<a href="{{myUrl}}">自定义超链接</a>';
+		};
+	});

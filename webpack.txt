@@ -1,0 +1,26 @@
+webpack
+一、安装：
+	npm init
+	npm install webpack --save-dev
+二、配置
+	配置文件为webpack.config.js
+	1.plugins：插件项
+	2.entry：页面入口文件配置
+	  output：输出项配置，入口文件最终生成文件的名字、存放位置
+	  {
+		entry: {
+			page1: "./page1",
+			page2: ["./entry1", "./entry2"]
+		},
+		output: {
+			path: "dist/js/page",
+			filename: "[name].bundle.js"
+		}
+	  }
+	3.module.loaders告知webpack每一种文件需要使用的加载器
+		module: {
+			loaders: [
+				{test: /\.css$/, loader: 'style-loader!css-loader'},
+				{test: /\.js$/, loader: 'jsx-loder?harmony'}
+			]
+		}

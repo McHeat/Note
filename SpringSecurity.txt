@@ -1,0 +1,19 @@
+SpringSercurity对HttpServletRequest属性的处理：
+contextPath：忽略，仅关注应用的安全路径
+servletPath：使用HttpFirewall策略包装请求，自动拒绝异常请求，移除路径参数和不推荐的斜线
+pathInfo：使用HttpFirewall策略包装请求，自动拒绝异常请求，移除路径参数和不推荐的斜线
+queryString：忽略，仅关注应用的安全路径
+
+核心Security过滤器：
+FilterSecurityInterceptor
+ExceptionTranslationFilter
+	|-AuthenticationEntryPoint：未认证时跳转认证入口
+	|-AccessDeniedHandler：未授权时显示未授权信息
+	|-RequestCache：跳转认证入口前保存请求信息
+SecurityContextPersistenceFilter：
+	|-多个HttpRequest之间保存SecurityContext
+	|-当请求结束时清空SecurityContextHolder
+	|-SecurityContextRepository：加载和保存SecurityContext
+		|-实现类：HttpSessionSecurityContextRepository
+UsernamePasswordAuthenticationFilter
+	

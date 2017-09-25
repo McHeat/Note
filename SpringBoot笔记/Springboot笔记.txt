@@ -1,0 +1,23 @@
+springboot:
+1.修改服务器端口 	--server.port=8081
+2.启动debug日志		--debugg
+3.横幅打印|停止		--spring.main.banner-mode=log|off
+4.修改启动横幅		
+	在classpath中添加banner.txt文件
+	--banner.location=file:/D:/banner.txt
+5.Builder方式		SpringApplicationBuilder类
+6.添加listener
+	SpringApplication.addListners(...)
+	SpringApplicationBuilder.listeners(...)
+7.CommandLineRunner或ApplicationRunner接口
+	实现类在SpringApplication启动前执行run方法
+8.获取配置值
+	@Value('${name}')
+8.配置文件			
+	默认：classpath下的application.properties(yml)等
+	指定名称：--spring.config.name=name
+	指定路径：--spring.config.location=path
+	
+	
+	
+	

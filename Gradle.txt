@@ -1,0 +1,17 @@
+1.在build.gradle文件中，会分别在buildScript和外部对repositories进行两次声明：
+	buildScript {
+		 repositories {
+			 mavenCentral()
+		}
+	}
+	repositories {
+		mavenCentral()
+	}
+	|--	buildScript中的声明是gradle脚本自身需要使用的资源，可声明的资源包括：依赖项、第三方插件、maven仓库地址等。
+	|	|--	脚本中使用的第三方插件、类库等需要在这个代码块中添加
+	|	|--	gradle会优先执行buildscript代码块中的内容，之后执行剩余build脚本
+	|--	在build.gradle文件中直接声明的依赖项、仓库地址等信息是项目自身需要的资源。
+	|	|--	项目中使用的类库定义在buildscript代码块之外的dependencies代码块中
+2.projects和tasks是Gradle中最重要的两个概念
+	|-- 一个Gradle构建由一个或多个projects组成。每个project包括许多可构建组成部分。
+	|--	每个project都由多个tasks组成。每个task都代表了构建执行过程中的一个原子性操作。

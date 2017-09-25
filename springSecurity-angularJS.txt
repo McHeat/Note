@@ -1,0 +1,540 @@
+Spring Security and AngularJS
+PART 1. 安全的单页Web应用
+	SpringSecurity、SpringBoot和AngularJS三者协作可为用户提供一些轻松愉快且安全可靠的使用体验。在这个章节，我们将会展示三者协作的那些很棒的特性。这个章节既适合Spring和AngularJS的初学者，同时也为两者的专家准备了很多有用的细节。实际上，这仅仅是关于SpringSecurity和AngularJS系列的开始，这个系列中的每个章节都准确地展现了它们的新特性。我们将在接下来的部分中继续优化应用，主要集中在结构上而非功能上的变更。
+	一、Spring和单页Web应用
+	HTML5(拥有丰富的基于浏览器的特性)和单页Web应用对现在的开发者来说是非常有价值的工具，但是每个有意义的交互都会涉及到后台服务器，甚至包括静态内容（HTML、CSS和JS）。后台服务器会扮演各种角色：为静态内容提供服务、有时（现在已不常见）提供动态HTML、认证用户、提供安全可用来保护资源、通过HTTP和JSON与浏览器中的JS交互。
+	鉴于在构建后台服务器方面（尤其是企业级后台）的特性，以及SpringBoot的出现导致构建过程变得前所未有的简单，Spring一直以来都是一项很流行的技术。现在，让我们开始使用SpringBoot、AngularJS和TwitterBootstrap来从头构建一个SPA吧。选择这套技术并没有什么特定原因，仅仅因为它相当受欢迎，尤其受企业级Java商店里的核心Spring的拥护者欢迎。因此，这是一个合算的切入点。
+	二、创建新工程
+	我们将详细地逐步创建这个工程，来确保对Spring和AngularJS不特别熟悉的人也能理解每一步在做什么。如果你想直接切入主题，可以直接跳到程序可运行位置查看它是如何工作的。空框架可直接通过git下载：
+	https://github.com/spring-guides/tut-spring-security-and-angular-js/tree/master/basic
+	1.添加Home页
+	SPA的核心是静态的index.html，所以，我们首先在src/main/resoources/static下创建index.html:
+	|----------------------------------------------------------------------------------
+	|index.html
+	|----------------------------------------------------------------------------------
+	|<!doctype html>
+	|<html>
+	|	<head>
+	|		<title>Hello AngularJS</title>
+	|		<link href="css/angular-bootstrap.css" rel="stylesheet">
+	|		<style type="text/css">
+	|			[ng\:cloak], [ng-cloak], .ng-cloak {
+	|			  display: none !important;
+	|			}
+	|		</style>
+	|	</head>
+    |
+	|	<body ng-app="hello">
+	|	  <div class="container">
+	|		<h1>Greeting</h1>
+	|		<div ng-controller="home" ng-cloak class="ng-cloak">
+	|		  <p>The ID is {{greeting.id}}</p>
+	|		  <p>The content is {{greeting.content}}</p>
+	|		</div>
+	|	  </div>
+	|	  <script src="js/angular-bootstrap.js" type="text/javascript"></script>
+	|	  <script src="js/hello.js"></script>
+	|	</body>
+	|</html>
+	|----------------------------------------------------------------------------------
+	重点：
+		1.ng-cloak样式类：div会隐藏直到angularJS处理完成，防止初始加载页面时的闪烁。
+		2.<body>被标注为ng-app="hello"，意味着需要定义一个JS模块，AngularJS会将这个模块视为“hello”应用。
+		3.所有的css类（除ng-cloak）来自TwitterBootStrap
+		4.在greeting中的内容都用handlebars进行了标记，如{{greeting.content}}。这些内容之后将会被Angular填充（通过ng-controller指定的“home”控制器）。
+		5.页面中引入的"hello.js"是我们定义应用行为的文件。
+	2.运行应用：
+		(1)使用命令mvn spring-boot:run进行构建
+		(2)开启服务器，登录http://localhost:8080
+		注意：浏览器会弹出登陆框要求录入用户名密码
+			解决方案一：application.yml中设置
+				management.security.enabled: false
+			解决方案二：在application.yml中设置
+				security.user.password=password
+				使用user和password登录
+	3.前端资源
+		Angular入门手册和其他前端技术通常直接使用网络引用库资源，比如Angular网站推荐从GoogleCDN下载。我们将会通过关联这些库中的文件生成“angular-bootstrap.js”文件来代替这种方式。这种方式并不是应用运行的必须条件，但是对于产品级应用来说，合并脚本来避免浏览器和服务器之间的唠叨是一种最好的体验。因为我们不会对css样式表进行修改或自定义，没必要生成“angularjs-bootstrap.css”，我们将直接使用GoogleCDN里的静态资源。然而，在实际的应用中我们几乎肯定会修改样式表且不愿意手动编辑。一些高级的工具可供选择使用，如Less或Sass，我们将选择其中的一个使用。
+		实现上述功能有多种方式，就本章节的目的来说，我们将选择使用wro4j。wro4j是一个基于Java的预处理和打包前端资源的工具链。wro4j可在任何的servlet应用中用作JIT过滤器，同时对Maven和Eclipse等构建工具有很好的支持。这就是我们选择使用它的原因。现在，我们将在应用jar中构建静态资源文件并打包它们。
+		|----------------------------------------------------------------------------
+		|   只要生成的js文件存放在src/main/resoources/static下，任何工具都行
+		|----------------------------------------------------------------------------
+		为了在build时创建静态资源，我们在pom.xml中做了些处理（这是些冗余的样式代码，所以可以把它们提取到maven的parentPom或gralde的共享任务|插件）：
+		|---------------------------------------------------------------------
+		|	pom.xml
+		|----------------------------------------------------------------------
+		|<build>
+		|	<resources>
+		|	  <resource>
+		|		<directory>${project.basedir}/src/main/resources</directory>
+		|	  </resource>
+		|	  <resource>
+		|		<directory>${project.build.directory}/generated-resources</directory>
+		|	  </resource>
+		|	</resources>
+		|	  <plugins>
+		|		  <plugin>
+		|			<artifactId>maven-resources-plugin</artifactId>
+		|			<executions>
+		|			  <execution>
+		|				<!-- Serves *only* to filter the wro.xml so it can get an absolute
+		|							  path for the project -->
+		|				<id>copy-resources</id>
+		|				<phase>validate</phase>
+		|				<goals>
+		|				  <goal>copy-resources</goal>
+		|				</goals>
+		|				<configuration>
+		|				  <outputDirectory>${basedir}/target/wro</outputDirectory>
+		|				  <resources>
+		|					<resource>
+		|					  <directory>src/main/wro</directory>
+		|					  <filtering>true</filtering>
+		|					</resource>
+		|				  </resources>
+		|				</configuration>
+		|			  </execution>
+		|			</executions>
+		|		  </plugin>
+		|		<plugin>
+		|		  <groupId>org.springframework.boot</groupId>
+		|		  <artifactId>spring-boot-maven-plugin</artifactId>
+		|		</plugin>
+		|		<plugin>
+		|		  <groupId>ro.isdc.wro4j</groupId>
+		|		  <artifactId>wro4j-maven-plugin</artifactId>
+		|		  <version>1.8.0</version>
+		|		  <executions>
+		|			<execution>
+		|			  <phase>generate-resources</phase>
+		|			  <goals>
+		|				<goal>run</goal>
+		|			  </goals>
+		|			</execution>
+		|		  </executions>
+		|		  <configuration>
+		|			<wroManagerFactory>ro.isdc.wro.maven.plugin.manager.factory.ConfigurableWroManagerFactory</wroManagerFactory>
+		|			<cssDestinationFolder>${project.build.directory}/generated-resources/static/css</cssDestinationFolder>
+		|			<jsDestinationFolder>${project.build.directory}/generated-resources/static/js</jsDestinationFolder>
+		|			<wroFile>${project.build.directory}/wro/wro.xml</wroFile>
+		|			<extraConfigFile>${project.build.directory}/wro/wro.properties</extraConfigFile>
+		|			<contextFolder>${project.build.directory}/wro</contextFolder>
+		|		  </configuration>
+		|		  <dependencies>
+		|			<dependency>
+		|			  <groupId>org.webjars</groupId>
+		|			  <artifactId>jquery</artifactId>
+		|			  <version>${jquery.version}</version>
+		|			</dependency>
+		|			<dependency>
+		|			  <groupId>org.webjars</groupId>
+		|			  <artifactId>angularjs</artifactId>
+		|			  <version>${angularjs.version}</version>
+		|			</dependency>
+		|			<dependency>
+		|			  <groupId>org.webjars</groupId>
+		|			  <artifactId>bootstrap</artifactId>
+		|			  <version>${bootstrap.version}</version>
+		|			</dependency>
+		|		  </dependencies>
+		|		</plugin>
+		|	  </plugins>
+		|	</build>
+		|--------------------------------------------------------------------------	
+		直接将上述代码拷贝到POM中即可。重点在于：
+		(1)引入了一些webjars库作为依赖项。这些jar中的一些静态资源会被打包到生成的“angular-bootstrap.*”文件中，jar不会打包到应用中。
+		(2)TwitterBootstrap会依赖jQuery，如果不使用Bootstrap可排除它。AngularJS有自己的jQuery版本，包含了所需的特性。
+		(3)生成的资源将存放在"target/classes"下，所以将被打包到项目的jar中，且在IDE的classpath中可用。
+		(4)Wro4j受不知道构建classpath的xml文件控制，且只认识绝对路径。所以我们需指定绝对路径并配置到wro.xml。
+	4.wro4j资源文件
+		在src/main/wro下仅有3个文件（其中一个还是空main.less）：
+		wro.properties 配置文件，用于wro4j中的预处理和指定引擎。
+		wro.xml 声明单独的一个名为angualr-bootstrap的资源group，这是生成的静态资源的基本名称。其中的<css>和<js>元素包括了我们添加的webjars中的引用，以及本地源文件main.less。
+		main.less 用于自定义外观和样式，更改TwitterBootstrap中的默认设定。
+	5.创建AngularY应用
+		修改src/main/resources/static/js/hello.js：
+		|-----------------------------------------------------
+		|	hello.js
+		|-----------------------------------------------------
+		|angular.module('hello', [])
+		|	  .controller('home', function($scope) {
+		|		$scope.greeting = {id: 'xxx', content: 'Hello World!'}
+		|	})
+		|-----------------------------------------------------
+		应用名称为“hello”有个空（且冗余）的config和名称为“home”的空“controller”。“home”控制器将在我们加载index.html时调用，因为我们在<div>中配置了ng-controller="home"。
+		注意：我们在控制器的function中注入了一个神奇的$scope，$scope在function中用于设置控制器代表的UI元素的内容和行为。
+		将文件放到src/main/resources/static/js下，app将可显示对应信息。
+	6.使用控制器As
+		直接绑定到$scope对我们来说有些太过神奇，也有些怪。Angular允许我们使用别名来明确指定控制器的命名空间，并且使用控制器实例本身而不是未明确的绑定到UI的$scope。我们需要做出俩个小小的修改，一个是在ng-controller中使用as关键字，另一个是当绑定模型时指定到controller的别名；
+		|------------------------------------------------------------------------
+		|	index.html
+		|------------------------------------------------------------------------
+		|	<div ng-controller="home as home" ng-cloak class="ng-cloak">
+		|	  <p>The ID is {{home.greeting.id}}</p>
+		|	  <p>The content is {{home.greeting.content}}</p>
+		|	</div>
+		|-----------------------------------------------------------------------
+		同时在客户端，我们需要绑定greeting信息到controller而不是$scope：
+		|------------------------------------------------------------------------
+		|	hello.js
+		|------------------------------------------------------------------------
+		|	angular.module('hello', [])
+		|	  .controller('home', function() {
+		|		this.greeting = {id: 'xxx', content: 'Hello World!'}
+		|	})
+		|------------------------------------------------------------------------
+	7.添加动态内容
+		到现在为止，我们通过硬编码的方式搭建了一个欢迎应用。在学习它们如何协同工作时这很有用，但是我们实际需要的内容来自于后台服务端，所以让我们来创建一个HTTP端来获取欢迎信息吧。在application类中添加@RestController注解并定义一个@RequestMapping:
+		|--------------------------------------------------------------------------
+		|	UiApplication.java
+		|--------------------------------------------------------------------------
+		|	@SpringBootApplication
+		|	@RestController
+		|	public class UiApplication {
+        |
+		|	  @RequestMapping("/resource")
+		|	  public Map<String,Object> home() {
+		|		Map<String,Object> model = new HashMap<String,Object>();
+		|		model.put("id", UUID.randomUUID().toString());
+		|		model.put("content", "Hello World");
+		|		return model;
+		|	  }
+        |
+		|	  public static void main(String[] args) {
+		|		SpringApplication.run(UiApplication.class, args);
+		|	  }
+        |
+		|	}
+		|--------------------------------------------------------------------------
+	8.从Angular中加载动态资源
+		修改home控制器加载受保护的资源：
+		|--------------------------------------------------------------------------
+		|	hello.js
+		|--------------------------------------------------------------------------
+		|	angular.module('hello', [])
+		|	  .controller('home', function($http) {
+		|	  var self = this;
+		|	  $http.get('/resource/').then(function(response) {
+		|		self.greeting = response.data;
+		|	  })
+		|	});
+		|--------------------------------------------------------------------------
+		我们注入了Angular提供的核心特性$http服务并GET需要的资源。一旦成功，Angular会把json串从应答报文中提取传递给我们使用。
+		再次运行应用（或仅仅在浏览器中重新加载home页），你会看到拥有唯一ID的动态信息。即使资源受保护而无法通过curl直接访问，浏览器依然可以使用这内容。我们仅仅用了不到一百行代码就搭建了一个安全的SPA。
+	9.这是如何工作的
+		如果你在使用一些开发者工具，你会在浏览器中看到浏览器和后台的交互。。。。。。。
+		如果仔细查看请求，你会发现它们都有一个Authorization头，如下：
+		|--------------------------------------------------------------------------
+		|	Authorization: Basic dXNlcjpwYXNzd29yZA==
+		|--------------------------------------------------------------------------
+		浏览器会通过每个请求发送用户名和密码（所以记得在产品中只使用HTTPS）。这与Angular没有任何关系，所以有无JS框架都可以运行。
+	10.这有什么问题
+		从表面看，我们似乎做得不错，这个框架简洁，容易实现，我们所有的数据会通过私人的密码来保护，而且即使我们改变了前端或后台的技术也照常有效。但是，还是有些问题：
+		(1)BasicAuthentication仅限于用户名和密码验证
+		(2)认证UI很普遍，但是却很丑（浏览器弹框）。
+		(3)对CSRF（跨浏览器请求伪造）没有保护。
+		CSRF对我们的应用来说并不是个问题，因为应用仅仅是获取后端资源（服务端不会发生状态变更）。一旦你开始在因管用中使用POST、PUT或DELETE时，对任何合理的现代模型来说都是不安全的。
+		下个章节，我们将会扩展应用来使用form-based验证，这比HTTP BASIC验证会更灵活。一旦有了表单，我们就需要CSRF保护，SpringSecurity和Angular都有一些特性来帮助完成这些。剧透：我们会使用HttpSession。
+		感谢：主要是RobWinh和Thorsten Spaeth对文档和源码的贡献
+PART 2. 登录页面
+	这个章节，我们会继续探讨如何在SPA中使用SpringSecurity和AngularJS。我们会在这个章节展示如何通过表单授权用户并获取安全资源来指定UI。这是系列的第二个章节，你可以补上应用的基本搭建部分，或浏览第一章节来搭建或直接从github下载。在第一章节中，我们搭建了一个通过HTTP Basic认证来保护后端资源的应用。这个章节，我们会添加登录表单，允许用户控制是否认证，并修复之前的问题（主要是CSRF保护的缺失）。
+	提示：记得请cookie缓存和HTTP Basic认证。
+	1.添加Home页的导航
+		SPA的核心是静态的index.html页面。我们已经做好了一个基本的页面，但是现在我们需要引入一些导航特性（login、logout和home）。让我们来修改一下：
+		|--------------------------------------------------------------------------
+		|	index.html
+		|--------------------------------------------------------------------------
+		|	<!doctype html>
+		|	<html>
+		|	<head>
+		|	<title>Hello AngularJS</title>
+		|	<link
+		|		href="css/angular-bootstrap.css"
+		|		rel="stylesheet">
+		|	<style type="text/css">
+		|	[ng\:cloak], [ng-cloak], .ng-cloak {
+		|		display: none !important;
+		|	}
+		|	</style>
+		|	</head>
+        |
+		|	<body ng-app="hello" ng-cloak class="ng-cloak">
+		|		<div ng-controller="navigation as nav" class="container">
+		|			<ul class="nav nav-pills" role="tablist">
+		|				<li class="active"><a href="#/">home</a></li>
+		|				<li><a href="#/login">login</a></li>
+		|				<li ng-show="authenticated"><a href="" ng-click="nav.logout()">logout</a></li>
+		|			</ul>
+		|		</div>
+		|		<div ng-view class="container"></div>
+		|		<script src="js/angular-bootstrap.js" type="text/javascript"></script>
+		|		<script src="js/hello.js"></script>
+		|	</body>
+		|	</html>
+		|--------------------------------------------------------------------------
+		它与原来版本实际上并没有多大不同。显著特点如下：
+		(1)添加了<ul>作为导航条。一旦我们设置了routes，所有的链接都会通过Angular能识别的方式直接回到了home页。
+		(2)所有的内容会作为局部区域添加到标记了ng-view的<div>中。
+		(3)ng-cloak被移到body上，因为我们希望在Angular找出指定内容后显示页面。否则页面加载时，menus和内容可能会因为移动而闪烁。
+		(4)同第一章节一致，前端的额angular-bootstrap.css和angular-bootstrap.js是在构建时从JAR库中生成。
+	2.将Navigation添加到Angular应用中
+		现在我们需要修改hello应用（src/main/resources/public/js/hello.js）来添加一些导航特性。我们先来添加一些routes特性，保证home页的links能够真正做些什么。
+		|--------------------------------------------------------------------------
+		|	hello.js
+		|--------------------------------------------------------------------------
+		|	angular.module('hello', [ 'ngRoute' ])
+		|	  .config(function($routeProvider, $httpProvider) {
+        |
+		|		$routeProvider.when('/', {
+		|		  templateUrl : 'home.html',
+		|		  controller : 'home',
+		|		  controllerAs: 'controller'
+		|		}).when('/login', {
+		|		  templateUrl : 'login.html',
+		|		  controller : 'navigation',
+		|		  controllerAs: 'controller'
+		|		}).otherwise('/');
+        |
+		|		$httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
+        |
+		|	  })
+		|	  .controller('home', function($http) {
+		|		var self = this;
+		|		$http.get('/resource/').then(function(response) {
+		|		  self.greeting = response.data;
+		|		})
+		|	  })
+		|	  .controller('navigation', function() {});
+		|--------------------------------------------------------------------------
+		我们添加了对Angular中“ngRoute”模块的依赖，这允许我们将$routeProvider注入到配置function中。$routeProvider在function中用于设置连接到"/"（home控制器）和"/login"（login控制器）。templateUrl是partial视图相对于routes根路径"/"的相对路径，用于表现每个控制器创建的model。
+		自定义的X-Requested-With是浏览器默认的header，曾经也是Angular的默认值，但是在1.3.0版本他们取消了这个设置。SpringSecurity会返回一个没有WWW-Authenticate头的401返回报文，这样浏览器将不会弹出认证框（这是我们app里想要的，因为我们想控制认证过程）。
+		为了使用ngRoute模块，我们需要在wro.xml配置汇总添加一行代码来构建静态资源（src/main/wro）:
+		|--------------------------------------------------------------------------
+		|	wro.xml
+		|--------------------------------------------------------------------------
+		|	<groups xmlns="http://www.isdc.ro/wro">
+		|	  <group name="angular-bootstrap">
+		|		...
+		|		<js>webjar:angularjs/1.4.9/angular-route.min.js</js>
+		|	   </group>
+		|	</groups>
+		|--------------------------------------------------------------------------
+	3.欢迎页面
+		原先的home页面中的greeting内容现在移到home.html中（src/main/resources/static）:
+		|--------------------------------------------------------------------------
+		|	home.html
+		|--------------------------------------------------------------------------
+		|	<h1>Greeting</h1>
+		|	<div ng-show="authenticated">
+		|		<p>The ID is {{controller.greeting.id}}</p>
+		|		<p>The content is {{controller.greeting.content}}</p>
+		|	</div>
+		|	<div  ng-show="!authenticated">
+		|		<p>Login to see your greeting</p>
+		|	</div>
+		|--------------------------------------------------------------------------
+		注意：我们在这里把控制器绑定到了"controller"，这是我们在route provider配置中如此声明的。
+		因为用户现在可以选择是否登录（之前是受浏览器控制），我们需要在UI中判断内容是否安全。我们通过新增加的authenticated变量来实现。
+	4.登录页面
+		登录页面如下：
+		|--------------------------------------------------------------------------
+		|	login.html
+		|--------------------------------------------------------------------------
+		|	<div class="alert alert-danger" ng-show="controller.error">
+		|		There was a problem logging in. Please try again.
+		|	</div>
+		|	<form role="form" ng-submit="controller.login()">
+		|		<div class="form-group">
+		|			<label for="username">Username:</label> <input type="text"
+		|				class="form-control" id="username" name="username" ng-model="controller.credentials.username"/>
+		|		</div>
+		|		<div class="form-group">
+		|			<label for="password">Password:</label> <input type="password"
+		|				class="form-control" id="password" name="password" ng-model="controller.credentials.password"/>
+		|		</div>
+		|		<button type="submit" class="btn btn-primary">Submit</button>
+		|	</form>
+		|--------------------------------------------------------------------------
+		这是非常标准的登录表单，包括2个输入框分别输入用户名和密码以及一个按钮用于通过ng-submit提交表单。form标签上并不需要action，所以最好不要添加action。我们还设置了一个错误信息，尽在angular的模型中包含了error变量时显示。表单控制器通过ng-model在HTML和Angular控制器之间传递数据，本例中我们使用credentials对象接收用户名和密码。根据之前定义的routes，登录表单与navigation控制器相关联，目前navigation还是空的，接下来我们将对它进行填充。
+	5.认证过程
+		为支持登录表单，我们需添加一些其他特性。客户端需要实现navigation控制器，服务器端需要配置SpringSecurity。
+	6.提交登录表单
+		为了提交登录表单，我们需要定义在表单里通过ng-submit引用的login()函数，通过ng-model引用的credentials对象。先来充实下hello.js中的navigation控制器(先忽略route配置和home控制器)：
+		|--------------------------------------------------------------------------
+		|	hello.js
+		|--------------------------------------------------------------------------
+		|	angular.module('hello', [ 'ngRoute' ]) // ... omitted code
+		|	.controller('navigation',
+        |
+		|	  function($rootScope, $http, $location) {
+        |
+		|	  var self = this
+        |
+		|	  var authenticate = function(credentials, callback) {
+		|		var headers = credentials ? {authorization : "Basic "
+		|			+ btoa(credentials.username + ":" + credentials.password)
+		|		} : {};
+        |
+		|		$http.get('user', {headers : headers}).then(function(response) {
+		|		  if (response.data.name) {
+		|			$rootScope.authenticated = true;
+		|		  } else {
+		|			$rootScope.authenticated = false;
+		|		  }
+		|		  callback && callback();
+		|		}, function() {
+		|		  $rootScope.authenticated = false;
+		|		  callback && callback();
+		|		});
+        |
+		|	  }
+        |
+		|	  authenticate();
+		|	  self.credentials = {};
+		|	  self.login = function() {
+		|		  authenticate(self.credentials, function() {
+		|			if ($rootScope.authenticated) {
+		|			  $location.path("/");
+		|			  self.error = false;
+		|			} else {
+		|			  $location.path("/login");
+		|			  self.error = true;
+		|			}
+		|		  });
+		|	  };
+		|	});
+		|--------------------------------------------------------------------------
+		navigation控制器里的所有代码将会在页面加载时执行，因为包含菜单栏的div可见且添加了ng-controller="navigation"。除了初始化credentials对象，控制器还定义了两个函数：表单需要的login()以及本地辅助函数authenticate()尝试加载后台的user资源。authenticate()函数会在控制器加载时被调用，判断用户是否已经被授权（判断用户是否在session中途刷新）。我们需要authenticate()函数做远程调用，实际的验证是后台服务器实现，且不信任浏览器记载的认证信息。
+		authenticate()函数设置了一个应用级的变量authenticated，我们在home.html中已经用它来控制展示哪部分页面。我们使用$rootScope可以简单方便的实现这功能，且需要在navigation和home控制器共享authenticated标识。Angular资深使用者可能更愿意通过共享的用户自定义服务来共享数据（实际机制一样）。
+		authenticate()通过GET方式调用相对资源/user（相对于应用的部署根目录）。当从login()调用时，会在headers中添加Base64编码的认证信息credentials，这样服务器执行验证并接收返回的cookie。获取验证结果后，login()函数同时设置了$scope.error标记来控制登录表单的错误信息展示。
+	7.当前认证用户
+		为了支持authenticate()函数，我们需要在后台端添加新的端点：
+		|--------------------------------------------------------------------------
+		|	UiApplication.java
+		|--------------------------------------------------------------------------
+		|	@SpringBootApplication
+		|	@RestController
+		|	public class UiApplication {
+        |
+		|	  @RequestMapping("/user")
+		|	  public Principal user(Principal user) {
+		|		return user;
+		|	  }
+        |
+		|	  ...
+        |
+		|	}
+		|--------------------------------------------------------------------------
+		在SpringSecurity应用中，这是个有用的技巧。如果/user资源可访问，将会返回当前认证的用户(Authentication)，否则SpringSecurity将会拦截请求并通过AuthenticationEntryPoint发送401报文。
+	8.在服务器端处理登录请求
+		SpringSecurity可简化对登录请求的处理。我们仅需要在main类中添加一些配置（内部类）：
+		|--------------------------------------------------------------------------
+		|	UiApplication.java
+		|--------------------------------------------------------------------------
+		|	@SpringBootApplication
+		|	@RestController
+		|	public class UiApplication {
+        |
+		|	  ...
+        |
+		|	  @Configuration
+		|	  @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+		|	  protected static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+		|		@Override
+		|		protected void configure(HttpSecurity http) throws Exception {
+		|		  http
+		|			.httpBasic()
+		|		  .and()
+		|			.authorizeRequests()
+		|			  .antMatchers("/index.html", "/home.html", "/login.html", "/").permitAll()
+		|			  .anyRequest().authenticated();
+		|		}
+		|	  }
+        |
+		|	}
+		|--------------------------------------------------------------------------
+		这是标准的SpringSecurity自定义方式，只允许匿名访问静态（HTML）资源（CSS和JS默认可用）。HTML资源可被匿名用户访问，而不是被SpringSecurity无视，因此这设置就很明确了。
+	9.登出
+		从功能性来说，应用已经基本完成。我们最后需要处理的是实现登出功能。如果用户已经认证，我们会显示logout链接并绑定到navigation控制器的logout函数。函数的实现非常简单：
+		|--------------------------------------------------------------------------
+		|	hello.js
+		|--------------------------------------------------------------------------
+		|	angular.module('hello', [ 'ngRoute' ]).
+		|	// ...
+		|	.controller('navigation', function(...) {
+        |
+		|	...
+        |
+		|	self.logout = function() {
+		|	  $http.post('logout', {}).finally(function() {
+		|		$rootScope.authenticated = false;
+		|		$location.path("/");
+		|	  });
+		|	}
+        |
+		|	...
+        |
+		|	});
+		|--------------------------------------------------------------------------
+		函数会发送一个HTTP POST到在服务端实现的/logout。SpringSecurity已经为我们添加了该实现，我们无需再做其他处理。如果想更好的控制登出行为，可以在WebSecurityAdapter中使用HttpSecurity回调，比如在登出后做一些其他业务逻辑。
+	10.CSRF保护
+		应用已经基本可用，实际上如果运行程序，你会发现目前为止我们构建的一切都可以正常工作，除了logout连接。SpringSecurity内置的CSRF保护机制会自动执行保护。它需要验证在header里的X-CSRF的token。CSRF令牌的值存储在服务器端的HttpRequest属性中，从加载的home页的初始请求开始。为了在客户端获取，我们可以通过动态HTML页面展示，通过自定义的端点显示，或设置在cookie中。cookie是个好方法，因为Angular有内置的基于cookie的CSRF支持模块，称为XSRF。
+		所以在服务器上，我们需要定义一个发送cookie的过滤器。Angular希望获取名称为XSRF-TOKEN的cookie，SpringSecurity会把它作为一个默认的请求属性，所以我们只需要将值从请求属性搬运到cookie中。幸运的是，SpringSecurity(4.1.0开始)提供了CsrfTokenReposity来正确处理:
+		|--------------------------------------------------------------------------
+		|	UiApplication.java
+		|--------------------------------------------------------------------------
+		|	@Configuration
+		|	@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+		|	protected static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+		|	  @Override
+		|	  protected void configure(HttpSecurity http) throws Exception {
+		|		http
+		|		  .httpBasic().and()
+		|		  .authorizeRequests()
+		|			.antMatchers("/index.html", "/home.html", "/login.html", "/").permitAll().anyRequest()
+		|			.authenticated().and()
+		|		  .csrf()
+		|			.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+		|	  }
+		|	}
+		|--------------------------------------------------------------------------
+		通过上述修改，我们不需要在客户端做任何操作，登录表单就可使用。
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

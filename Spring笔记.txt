@@ -1,0 +1,243 @@
+DependencyManagement
+	|-继承parentMaven
+	|	<!-- Inherit defaults from Spring Boot -->
+	|	<parent>
+	|		<groupId>org.springframework.boot</groupId>
+	|		<artifactId>spring-boot-starter-parent</artifactId>
+	|		<version>1.4.1.RELEASE</version>
+	|	</parent>
+	| -使用bom
+	|	<dependencyManagement>
+	|		 <dependencies>
+	|			<dependency>
+	|				<!-- Import dependency management from Spring Boot -->
+	|				<groupId>org.springframework.boot</groupId>
+	|				<artifactId>spring-boot-dependencies</artifactId>
+	|				<version>1.4.1.RELEASE</version>
+	|				<type>pom</type>
+	|				<scope>import</scope>
+	|			</dependency>
+	|		</dependencies>
+	|	</dependencyManagement>
+
+
+AOP：
+配置开启@EnableAspectJAutoProxy注解
+配置中注册类@Bean
+类开启注解@Aspect
+类内部使用@Pointcut声明连接点，表达式确定方法
+类内部使用@Before、@AfterReturning、@AfterThrowing、@After、@Around开启切点
+环绕通知：ProceedingJoinPoint，通过jp.proceed()
+参数传递：表达式中添加args，连接点及方法加注参数
+
+
+Spring连接数据库：
+1.jdbc直连：jdbc写法及使用jdbcTemplate
+2.hibernate：创建LocalSessionFactoryBean
+3.JPA：EntityManagerFactory创建EntityManager
+	|-- Application级：通过PersistenceProvider的createEntityManagerFactory()创建EntitymanagerFactory
+	|-- Container级（推荐）：通过PersistenceProvider的createContainerEntityManagerFactory()创建EntitymanagerFactory
+	|-- 提供JpaVendorAdapter及数据源
+4.SpringDataJPA：作为接口，继承JpaRepository接口
+	
+缓存机制：
+1.通过使用Redis缓存、EhCache缓存等等实现。
+2.@Cacheable	--	缓存中存在时不再执行方法	value、key、condition、unless
+  @CachePut		--	任何时候都会执行方法		value、key、condition、unless
+  @CacheEvict	--	从缓存中删除				value、key、condition、allEntries、beforeInvocation
+3.xml配置：
+
+
+Spring事务管理
+1.配置PlatformTransactionManager的bean
+	PlatformTransactionManager 
+		|--> getTransaction(...)
+		|	|--> TransactionStatus
+		|	|--> TransactionDefinition: isolation、propagation、timeout、readonly-Status
+		|--> 配置dataSource
+2.在class或method上添加@Transactional注解
+3.使用事务同步资源
+	|--> 高级层次资源同步方案：模板类持久化集成或是ORM等APIs
+	|--> 低层次资源同步方案：*Utils
+	|--> TransactionAwareDataSourceProxy
+4.声明式注解通过代理类TransactionInterceptor处理
+5.默认仅会回滚RuntimeException异常，但可配置回滚任何异常
+6.在默认的代理模式下，仅进入代理的外部方法调用才会被拦截并创建事务。
+
+
+AMQP:
+connectionFactory 
+	|--> amqpTemplate: @Autowired
+	|--> amqpAdmin: @Autowired
+			|--> 查找beans:Queue|Exchange|Binding
+Message
+	|-- 组成：body(byte[])、messageProperties(MessageProperties)
+Exchange：MessageProducer发送信息的对象
+	|--	类型：Direct、Topic、Fanout、Headers
+	|--	将Queue绑定到Exchange
+Queue：MessageConsumer接收信息的来源
+Bingding：连接Queues和Exchanges，进而连接了消息的生成者和接收者
+	|--	BindingBuilder：构造Binding
+ConnectionFactory：创建Connection，Spring目前仅支持CachingConnectionFactory
+RabbitTemplate：发送及接收Message
+MessageListenerContainer：异步接收消息
+	|-- 使用接口MessageListener
+	|--	使用接口ChannelAwareMessageListener（channel）
+	|--	使用MessageListenerAdapter（）
+
+@Bean注解：
+	|--	@Configuration类中
+	|	|--	方法会通过spring容器被调用，实现对生命周期的管理和SpringBean的代理
+	|-- @Component类中
+	|	|--	方法会通过Java的语法调用，而不会有任何CGLIB处理或其他约束
+	|--	方法声明为static（如：BeanPostProcessor和BeanFactoryPostProcessor）
+	|	|--	方法可在configuration类未创建实例时调用
+	|	|		会早于容器生命周期完成初始化并避免触发configuration的其他部分
+	|	|		不会被容器拦截，因为CGLIB只会重写非static方法
+	|	|--	通常用于BeanFactoryPostProcessor或BeanPostProcessor的声明
+	
+
+条件化注解：
+	|--	@ConditionalOnBean                配置了某个特定Bean
+	|--	@ConditionalOnMissingBean         没有配置特定的Bean
+	|--	@ConditionalOnClass               Classpath里有指定的类
+	|--	@ConditionalOnMissingClass        Classpath里缺少指定的类
+	|--	@ConditionalOnExpression          给定的SpEL表达式计算结果为true
+	|--	@ConditionalOnJava                Java的版本匹配特定值或一个范围值
+	|--	@ConditionalOnJndi                给定的Jndi位置必须存在一个，如果没有参数，则有JNDI InitialContext
+	|--	@ConditionalOnProperty            指定的配置属性要有一个明确的值
+	|--	@ConditionalOnResource            Classpath里有指定的资源
+	|--	@ConditionalOnWebApplication     这是一个Web应用程序
+	|--	@ConditionalOnNotWebApplication  这不是一个Web应用程序
+@Profile注解：启动特定注解
+
+Java和Xml配置的结合：
+	|--	方法一：使用ClassPathXmlApplicationContext
+	|--	方法二：使用AnnotationConfigApplicationContext并通过@ImportResource引入XML
+	
+	
+激活Profile的方式：
+	|--	1.通过ApplicationContext
+	|		ctx.getEnvironment().setActiveProfiles("profile1");
+	|--	2.通过系统变量spring.profiles.active属性
+	|		-Dspring.profiles.active="profile1"
+	|--	3.在spring-test中通过@ActiveProfiles
+
+Property优先级（由高到低）：
+	|--	ServletConfig的参数
+	|--	ServletContext参数（web.xml上下文参数）
+	|--	JNDI环境变量（"java:comp/env/"）
+	|--	JVM系统属性（-D命令行参数）
+	|--	JVM系统环境变量（操作系统的环境变量）
+
+LoadTimeWeaver:
+	|--	在类加载到JVM时动态地修改类
+	|--	开启方式：添加@EnableLoadTimeWeaving到@Configuration类
+
+ApplicationContext的附加功能：
+	|--	i18n功能：
+	|	|--	通过继承MessageSource接口和HierarchicalMessageSource接口
+	|	|--	主要接口方法：
+	|	|	String getMessage(String code, Object[] args, String default, Locale loc)
+	|	|	String getMessage(String code, Object[] args, Locale loc)
+	|	|	String getMEssage(MessageSourceResolvable resolvable, Locale loc)
+	|	|--	原理：
+	|	|	ApplicationContext加载时，自动寻找MessageSource的bean，bean的名字必须是MessageSource。
+	|	|		如果找到此bean，上述方法会委托给这个bean。
+	|	|		如果未找到此bean，ApplicationContext会尝试在父容器中查找。
+	|	|		如果未找到，使用空的DelegatingMessageSource
+	|	|--	Spring提供的实现类：
+	|	|		ResourceBundleMessageSource：继承了HierarchicalMessageSource
+	|	|		StaticMessageSource：继承了HierarchicalMessageSource
+	|	|--	使用方式：
+	|	|		1.注册名为messageSource的bean，通过basenames属性来指定多个ResourceBundles.
+	|	|		2.通过MessageSource接口的方法获取message信息。
+	|--	ResourceLoader接口：
+	|	|--	用于加载Spring的Resource。Resource实质上是个功能丰富的java.net.URL，代表底层外部资源。
+	|--	ApplicationEventPublisher接口：
+	|	|--	上下文中的Event处理是通过ApplicationEvent和ApplicationListener接口实现
+	|	|--	内置Events
+	|	|		ContextRefreshedEvent：
+	|	|			当ApplicationContext被初始化或刷新时触发，
+	|	|			此时beans全部已加载，PostProcessor已检测并激活，单例bean已经预初始化
+	|	|		ContextStartedEvent：
+	|	|			当ApplicationContext已启动时触发
+	|	|			此时所有Lifecycle的bean收到了明确的开始信号
+	|	|		ContextStoppedEvent：
+	|	|			当ApplicationContext停止时触发
+	|	|			此时所有Lifecycle的bean收到了明确的停止信号
+	|	|		ContextClosedEvent：
+	|	|			当ApplicationContext关闭时触发
+	|	|			此时所有单例bean被销毁
+	|	|		RequestHandledEvent：
+	|	|			web专用，当HTTP请求已经处理结束是触发。仅在DispatcherServlet时适用
+	|	|--	自定义Event：
+	|	|		1.继承ApplicationEvent接口
+	|	|		2.通过ApplicationEventPublisher的publishEvent()方法发布event
+	|	|		3.通过ApplicationListener实现类注册为springBean来处理event
+	|	|--	Annotation-based Event Listener：
+	|	|		从4.2开始，通过@EventListener可把public方法注册为EventListener
+	|	|		监听多个Event时，可使用@EventListener({ContextStartedEvent.class, ContextRefreshedEvent.class})
+	|	|		通过condition属性定义SpEL添加运行时过滤
+	|	|		方法返回新的Event会触发新的EventListener(不支持Async)
+	|	|		@Async开启异步处理Event
+	|	|		泛型Event：EntityCreatedEvent<T>
+	|--	HierarchicalBeanFactory接口：
+	
+BeanFactory:
+	|--	与ApplicationContext的不同：
+	|		1.不支持BeanPostProcessor和BeanFactoryPostProcessor的自动注册
+	|		2.不支持i18n
+	|		3.不支持ApplicationEvent的发布
+	
+	
+Resource:
+	|--	相对于java.net.URL，Spring的Resource接口更适用于使用底层资源
+	|--	主要接口：
+	|		getInputStream()：定位并打开资源
+	|		exist()：判断资源是否真正存在
+	|		isOpne()：判断是否已打开
+	|		getDescription()：返回资源的描述
+	|--	内置Resource实现：
+	|	|--	UrlResource
+	|	|		代表可通过URL使用的资源如文件(file:)，HTTP(http:)或FTP(ftp:)
+	|	|--	ClassPathResource:
+	|	|		代表可从classpath获取到的资源。
+	|	|--	FileSystemResource
+	|	|--	ServletContextResource：
+	|	|		ServletContext资源。资源路径是相对于web应用的根目录
+	|	|--	InputStreamResource：针对给定的InputSream
+	|	|--	ByteArrayResource：	针对给定的字节数组
+ResourceLoader:
+	|--	用于获取Resource实例的接口。所有的应用上下文都实现了ResourceLoader接口。
+	|--	在特定应用上下文中，调用getResource()且未指定前缀时，会获取到恰当的Resource类型。
+ResourceLoaderAware接口
+	|
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
