@@ -1,3 +1,162 @@
+安全层次：
+	|--	在底层处理传输安全性和系统认证，用于减轻中间人攻击（man-in-the-middle attack）。
+	|--	使用防火墙（VPN或IP安全性）来确保仅授权系统可尝试连接。
+	|--	使用隔离区（DMZ）分隔开对公服务器和后台数据库、应用服务器。
+	|--	操作系统以无授权用户或最大化文件系统保护方式运行进程，以及配置防火墙。
+	|--	入侵检测系统在监视和回应攻击中十分有效，可预防阻塞式TCP/IP攻击。
+	|--	通过配置JVM最小化授权给不同Java类型的许可。
+	|--	应用本身添加特定领域的安全配置。
+SpringSecurity为基于JavaEE的企业软件应用提供了综合性的安全服务，尤其是基于Spring框架的项目。
+	|--	应用安全的两个主要领域：
+	|	Authentication：建立Principal的过程，Principal通常指在应用中可执行某种操作的用户、设备或其他系统。
+	|	Authorization：决定Principal在应用中是否允许执行某种操作的过程。
+	|--	启动Java配置
+	|	|--	创建springSecurityFilterChain过滤器：
+	|	|		扩展WebSecurityConfigurerAdapter类为WebSecurityConfig，并注解为@EnableWebSecurity。
+	|	|	|---------------------------------------------------------------------------------------------------------|
+	|	|	|	@EnableWebSecurity                                                                                    |
+	|	|	|	public class WebSecurityConfig extends WebSecurityConfigurerAdapter {                                 |
+	|	|	|		@Bean                                                                                             |
+	|	|	|		public UserDetailsService userDetailsService() throws Exception {                                 |
+	|	|	|			InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();                        |
+	|	|	|			manager.createUser(User.withUsername("user").password("password").roles("USER").build());     |
+	|	|	|			return manager;                                                                               |
+	|	|	|		}                                                                                                 |
+	|	|	|	}                                                                                                     |
+	|	|	|---------------------------------------------------------------------------------------------------------|
+	|	|--	注册springSecurityFitlerChain过滤器:
+	|	|		通过Spring的AbstractSecurityWebApplicationInitializer确保已注册。
+	|	|		1.未使用spring的情况下
+	|	|	|----------------------------------------------------------------------------|
+	|	|	|	public class SecurityWebApplicationInitializer                           |
+	|	|	|		extends AbstractSecurityWebApplicationInitializer {                  |
+	|	|	|		public SecurityWebApplicationInitializer() {                         |
+	|	|	|			super(WebSecurityConfig.class);                                  |
+	|	|	|		}                                                                    |
+	|	|	|	}                                                                        |
+	|	|	|----------------------------------------------------------------------------|
+	|	|			- 为应用的每个URL都自动注册springSecurityFilterChain过滤器
+	|	|			- 添加加载了WebConfig的ContextLoaderListener
+	|	|		2.使用SpringMVC的情况下
+	|	|			此时应用中已存在加载了spring配置的WebAppplicationInitializer，在已存在的ApplicationContext中注册SpringSecurity。
+	|	|	|---------------------------------------------------------------------------------|
+	|	|	|	public class SecurityWebApplicationInitializer                                |
+	|	|	|		extends AbstractSecurityWebApplicationInitializer {                       |
+    |	|	|	                                                                              |
+	|	|	|	}                                                                             |
+	|	|	|---------------------------------------------------------------------------------|
+	|	|			这仅为应用中的每个URL都自动注册springSecurityFilterChain过滤器。
+	|	|			之后，确保WebSecurityConfig在已存在的ApplicationInitializer中加载
+	|	|   |----------------------------------------------------------------------------------|
+	|	|	|	public class MvcWebApplicationInitializer extends                              |
+	|	|	|			AbstractAnnotationConfigDispatcherServletInitializer {                 |
+	|	|	|	                                                                               |
+	|	|	|		@Override                                                                  |
+	|	|	|		protected Class<?>[] getRootConfigClasses() {                              |
+	|	|	|			return new Class[] { WebSecurityConfig.class };                        |
+	|	|	|		}                                                                          |
+	|	|	|	                                                                               |
+	|	|	|		// ... other overrides ...                                                 |
+	|	|	|	}                                                                              |
+	|	|	|----------------------------------------------------------------------------------|
+	|--	HttpSecurity配置
+	|	|--	通过配置WebSecurityConfigurerAdapter中提供的configure(HttpSecurity http)方法设置认证方式等。
+	|	|	|-----------------------------------------------------------------------------------------|
+	|	|	|	protected void configure(HttpSecurity http) throws Exception {                        |
+	|	|	|		http                                                                              |
+	|	|	|			.authorizeRequests()                                                          |
+	|	|	|				.anyRequest().authenticated()                                             |
+	|	|	|				.and()                                                                    |
+	|	|	|			.formLogin()                                                                  |
+	|	|	|				.and()                                                                    |
+	|	|	|			.httpBasic();                                                                 |
+	|	|	|	}                                                                                     |
+	|	|	|-----------------------------------------------------------------------------------------|
+	|--	表单登录
+	|	|--	当SPringSecurity的默认配置没有明确设置登录页面的URL时，会自动创建一个URL及登录页面。
+	|	|--	通过formLogin().loginPage("/login").permitAll()可配置自定义的登录URL及登录页面（需自己写）。
+	|	|		需传递username和password的值作为HTTP的参数。
+	|--	授权请求
+	|	|--	通过http.authorizeRequests()方法指定URL的自定义条件。
+	|--	处理登出
+	|	|--	默认的登出使用/logout，作用：
+	|	|		使HTTP Session失效
+	|	|		清空配置的RememberMe授权
+	|	|		清空SecurityContextHolder
+	|	|		重定向到/login?logout
+	|	|--	可通过http.logout()配置自定义登出操作
+	|	|--	LogoutHandler实现类：指会参与到登出处理的类，用来执行必须的清理工作。不能抛出异常。
+	|	|--	LogoutSuccessHandler：在登出成功后被LogoutFilter调用，用来处理重定向或跳转到正确的目标。可抛出异常。
+
+Authentication（认证）
+	|--	In-Memory认证：通过创建InMemoryUserDetailsManager实例的UserDetailsService的Bean。
+	|	|	|---------------------------------------------------------------------------------------------------------------|
+	|	|	|	@Bean                                                                                                       |
+	|	|	|	public UserDetailsService userDetailsService() throws Exception {                                           |
+	|	|	|		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();                                  |
+	|	|	|		manager.createUser(User.withUsername("user").password("password").roles("USER").build());               |
+	|	|	|		manager.createUser(User.withUsername("admin").password("password").roles("USER","ADMIN").build());      |
+	|	|	|		return manager;                                                                                         |
+	|	|	|	}                                                                                                           |
+	|	|	|---------------------------------------------------------------------------------------------------------------|	
+	|--	JDBC认证：
+	|	|	|---------------------------------------------------------------------------------------------------------------|
+	|	|	|	@Autowired                                                                                                  |
+	|	|	|	private DataSource dataSource;                                                                              |
+    |	|	|	                                                                                                            |
+	|	|	|	@Autowired                                                                                                  |
+	|	|	|	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {                           |
+	|	|	|		auth                                                                                                    |
+	|	|	|			.jdbcAuthentication()    //	开启jdbc认证                                                            |
+	|	|	|				.dataSource(dataSource)                                                                         |
+	|	|	|				.withDefaultSchema()                                                                            |
+	|	|	|				.withUser("user").password("password").roles("USER").and()                                      |
+	|	|	|				.withUser("admin").password("password").roles("USER", "ADMIN");                                 |
+	|	|	|	}                                                                                                           |
+	|	|	|---------------------------------------------------------------------------------------------------------------|
+	|--	LDAP认证：LDAP支持
+	|--	AuthenticationProvider：
+	|	|--	通过将自定义的AuthenticationProvider注册为bean来定义认证。
+	|--	UserDetailsService：
+	|	|--	通过自定义UserDetailsService声明为bean来定义认证。同时可配置BCryptPasswordEncoder的bean来加密密码。
+	|	|--	仅当AuthenticationManagerBuilder未改动且未定义AuthenticationProvider时生效。
+	|--方法安全
+	|	|--	@EnableGlobalMethodSecurity
+	|	|	1.在@Configuration实例上添加此注解
+	|	|	2.设置securedEnabled=true则开启了@Secured注解支持
+	|	|	3.设置jsr250Enabled=true则开启了JSR-250注解支持
+	|	|	4.设置prePostEnabled=true则开启了@PreAuthorize注解支持
+	|	|--	MethodSecurityExpressionHandler
+	|	|--	扩展：可通过扩展GlobalMethodSecurityConfiguration，并添加@EnableGlobalMethodSecurity注解。
+	|--后置处理配置对象：ObjectPostProcessor
+	|--自定义DSL：扩展AbstractHttpConfigurer
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
 SpringSercurity对HttpServletRequest属性的处理：
 contextPath：忽略，仅关注应用的安全路径
 servletPath：使用HttpFirewall策略包装请求，自动拒绝异常请求，移除路径参数和不推荐的斜线
