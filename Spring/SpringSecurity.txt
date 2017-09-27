@@ -131,18 +131,54 @@ Authentication（认证）
 	|--后置处理配置对象：ObjectPostProcessor
 	|--自定义DSL：扩展AbstractHttpConfigurer
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+SecurityNamespace配置
+	|--	在xml文件中添加xmlns:security="http://www.springframework.org/schema/security"
+	|		在xsi:schemaLocation中加入http://www.springframework.org/schema/security 
+	|								  http://www.springframework.org/schema/security/spring-security.xsd
+	|--	开始使用SecurityNamespace配置
+	|	1.在web.xml文件中添加过滤器
+	|	|------------------------------------------------------------------------------------------------------|
+	|	|	<filter>                                                                                           |
+	|	|	<filter-name>springSecurityFilterChain</filter-name>                                               |
+	|	|	<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>                  |
+	|	|	</filter>                                                                                          |
+	|	|	                                                                                                   |
+	|	|	<filter-mapping>                                                                                   |
+	|	|	<filter-name>springSecurityFilterChain</filter-name>                                               |
+	|	|	<url-pattern>/*</url-pattern>                                                                      |
+	|	|	</filter-mapping>                                                                                  |
+	|	|------------------------------------------------------------------------------------------------------|
+	|	2.<http>配置
+	|	|------------------------------------------------------------------------------------------------------|
+	|	|	<http>                                                                                             |
+	|	|	<intercept-url pattern="/**" access="hasRole('USER')" />                                           |
+	|	|	<form-login />                                                                                     |
+	|	|	<logout />                                                                                         |
+	|	|	</http>	                                                                                           |
+	|	|------------------------------------------------------------------------------------------------------|
+	|--	其他特性
+	|	|--	Remember-Me认证
+	|	|--	添加HTTP/HTTPS通道安全：requires-channel="https|http|any"
+	|	|--	session管理:
+	|	|	|--	通过session-management配置检测无效sessionID并重定向到正确的URL
+	|	|	|		使用该机制检测session超时在用户登出后未关闭浏览器再次登录时可能报错。
+	|	|	|		设置<http><logout delete-cookies="JSESSIONID"/></http>可避免。
+	|	|	|--	并发session控制
+	|	|	|		添加org.springframework.security.web.session.HttpSessionEventPublisher监听器
+	|	|	|		配置<session-management><concurrency-control max-sessions="1" /></session-management>
+	|	|	|--	SessionFixation攻击保护
+	|	|	|		配置session-fixation-protection属性：none、newSession、migrateSession、changeSessionId
+	|	|--	OpenID支持
+	|	|	|--	通过<openid-login />代替<form-login />
+	|	|	|	使用OpenID的provider来注册，并添加用户消息到userDetailsService
+	|	|	|--	AttributeExchange：通过OpenID provider获取指定的属性值信息，可通过代码获取属性值
+	|	|	|	|----------------------------------------------------------------------------------------------------|	
+	|	|	|	|	OpenIDAuthenticationToken token =                                                                |
+	|	|	|	|			(OpenIDAuthenticationToken)SecurityContextHolder.getContext().getAuthentication();       |
+	|	|	|	|	List<OpenIDAttribute> attributes = token.getAttributes();                                        |
+	|	|	|	|----------------------------------------------------------------------------------------------------|
+	|	|	|		
+	|	|	|		
 	
 	
 	
