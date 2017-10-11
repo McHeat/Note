@@ -1,22 +1,295 @@
-springboot:
-1.修改服务器端口 	--server.port=8081
-2.启动debug日志		--debugg
-3.横幅打印|停止		--spring.main.banner-mode=log|off
-4.修改启动横幅		
-	在classpath中添加banner.txt文件
-	--banner.location=file:/D:/banner.txt
-5.Builder方式		SpringApplicationBuilder类
-6.添加listener
-	SpringApplication.addListners(...)
-	SpringApplicationBuilder.listeners(...)
-7.CommandLineRunner或ApplicationRunner接口
-	实现类在SpringApplication启动前执行run方法
-8.获取配置值
-	@Value('${name}')
-8.配置文件			
-	默认：classpath下的application.properties(yml)等
-	指定名称：--spring.config.name=name
-	指定路径：--spring.config.location=path
+	
+Build系统：
+	|--	推荐使用支持依赖管理及使用maven中心库的构建工具，如Maven和Gradle
+	|--	SpringBoot的每个发行版都会提供支持的依赖清单。
+	|		org.springframework.boot:spring-boot-dependencies:1.5.7.RELEASE
+	|--	Maven构建：
+	|	|--	默认继承spring-boot-starter-parent工程来获取合理的默认值。
+	|	|--	继承starter parent
+	|	|		此方法可使用starter的依赖管理和插件管理
+	|	|	|----------------------------------------------------------------------------------|
+	|	|	|	<!-- Inherit defaults from Spring Boot -->                                     |
+	|	|	|	<parent>                                                                       |
+	|	|	|		<groupId>org.springframework.boot</groupId>                                |
+	|	|	|		<artifactId>spring-boot-starter-parent</artifactId>                        |
+	|	|	|		<version>1.5.7.RELEASE</version>                                           |
+	|	|	|	</parent>                                                                      |
+	|	|	|----------------------------------------------------------------------------------|
+	|	|--	通过dependencies管理依赖
+	|	|		此方法可使用dependencies的依赖管理，但是无法使用插件管理。
+	|	|	|----------------------------------------------------------------------------------|
+	|	|	|	<dependencyManagement>                                                         |
+	|	|	|		<dependencies>                                                             |
+	|	|	|			<dependency>                                                           |
+	|	|	|				<!-- Import dependency management from Spring Boot -->             |
+	|	|	|				<groupId>org.springframework.boot</groupId>                        |
+	|	|	|				<artifactId>spring-boot-dependencies</artifactId>                  |
+	|	|	|				<version>1.5.7.RELEASE</version>                                   |
+	|	|	|				<type>pom</type>                                                   |
+	|	|	|				<scope>import</scope>     <!-- 使用import -->                      |
+	|	|	|			</dependency>                                                          |
+	|	|	|		</dependencies>                                                            |
+	|	|	|	</dependencyManagement>                                                        |
+	|	|	|----------------------------------------------------------------------------------|
+	|	|--	修改Java版本
+	|	|		<properties><java.version>1.8</java.version></properties>
+	|	|--	使用SpringBootMaven插件
+	|	|	|----------------------------------------------------------------------------------|
+	|	|	|	<build>                                                                        |
+	|	|	|		<plugins>                                                                  |
+	|	|	|			<plugin>                                                               |
+	|	|	|				<groupId>org.springframework.boot</groupId>                        |
+	|	|	|				<artifactId>spring-boot-maven-plugin</artifactId>                  |
+	|	|	|			</plugin>                                                              |
+	|	|	|		</plugins>                                                                 |
+	|	|	|	</build>                                                                       |
+	|	|	|----------------------------------------------------------------------------------|
+	|	|	如果使用的SpringBoot starter parent的pom，只需要指定plugin。否则需配置execution。
+	|--	Gradle构建
+	
+Configuration类
+	|--	SpringBoot提倡使用java-based配置。
+	|		通常，定义了main方法的类也是主要@Configuartion的首选。
+	|--	引入更多的configuration类
+	|		通过@Import注解可引入额外的configuration类。
+	|		可使用@ComponentScan来自动注册所有的Spring组件，包括@Configuration类。
+	|--	引入XML配置
+	|		通过@ImportResource注解来加载XML配置文件。
+	
+自动配置
+	|--	SpringBoot的自动配置会尝试根据已添加的jar依赖自动配置Spring应用。
+	|		通过在其中一个@Configuartion类上添加@EnableAutoConfiguration或@SpringBootApplication注解可开启自动配置。
+	|--	逐步取代自动配置
+	|	|--	自动配置是非侵入式的。可通过自定义配置来取代自动配置中的特定部分。
+	|	|		在启动应用时添加--debug可查看当前正在使用的自动配置。
+	|--	禁用特定自动配置
+	|	|--	通过@EnableAutoConfiguration设置exclude的值可禁用自动配置。
+	|	|--	通过spring.autoconfigure.exclude设置排除自动配置的类。
+	
+开发者工具
+	|--	添加spring-boot-devtools模块
+	
+SpringApplication类
+	|--	提供了通过main()方法引导启动Spring应用的简便方法。
+	|		绝大多数情况，可直接使用SpringApplication.run()静态方法。
+	|--	启动失败：
+	|		当应用启动失败时，注册的FailureAnalyzers会提供专用错误信息和修复问题的详细方法。
+	|		如果无法处理异常时，可通过展示完整的auto-configuration报告来查看问题。--debug
+	|--	自定义Banner
+	|		1.通过在classpath下添加banner.txt文件或设置banner.location指定文件可修改启动时打印的banner。
+	|		通过banner.charset可指定文件的编码格式。
+	|		2.可添加banner.gif、banner.jpg、banner.png图片文件或设置banner.image.location属性来使用图片。
+	|		3.可使用spring.main.banner-mode属性设置使用System.out(设为console)或配置的log(设为log)或不打印(设为off)。
+	|--	配置SpringApplication
+	|	|--	1.当SpringApplication的默认行为不满足需求时，可创建并配置本地实例。
+	|	|	|-------------------------------------------------------------------------|
+	|	|	|	SpringApplication app = new SpringApplication();                      |
+	|	|	|	app.setBannerMode(Banner.Mode.OFF);                                   |
+	|	|	|	app.run(args);                                                        |
+	|	|	|-------------------------------------------------------------------------|
+	|	|--	2.通过application.properties文件也可配置SpringApplication。
+	|--	流式构造API
+	|	|--	当需要创建一个ApplicationContext层级架构时，可考虑使用SpringApplicationBuilder。
+	|	|--	当创建ApplicationContext层级架构时，有一些限制：
+	|	|		web组件必须在childContext中，parent和child context使用相同的Environment。等等~
+	|--	Application Events和监听器
+	|	|--	除了使用Spring框架的事件ContextRefreshedEvent等，SpringApplication还添加了一些额外的应用事件。
+	|	|		有些event可能在ApplicationContext创建之前触发，所以不可以通过@Bean注册监听器。
+	|	|		1.可通过SpringApplication.addListners(...)或SpringApplicationBuilder.listeners(...)方法注册监听器。
+	|	|		2.自动注册监听器：
+	|	|		  在META-INF/spring.factories文件中添加
+	|	|			org.springframework.context.ApplicationListener=com.example.MyListener
+	|	|--	应用event：
+	|	|		ApplicationStartingEvent：在run开始时发送，在监听器和初始程序注册之后，其他所有操作之前。（监听器未获取到消息？）
+	|	|		ApplicationEnvironmentPreparedEvent：当Environment创建后context创建前发送。
+	|	|		ApplicationPreparedEvent：在refresh开始前bean定义加载后发送。
+	|	|		ApplicationReadyEvent：在refresh后且所有相关回调已处理完成后发送，表示应用已可为request服务。
+	|	|		ApplicationFailedEvent：启动抛出异常时发送。
+	|--	Web Environment
+	|	|--	SpringApplication会尝试为你创建正确的ApplicationContext。
+	|	|		SpringApplication默认会创建AnnotationConfigApplicationContext或AnnotationConfigEmbeddedWebApplicationContext
+	|	|		可通过setWebEnvironment(boolean webEnvironment)设置是否使用web environment。
+	|--	使用应用的arguments
+	|	|--	通过注入ApplicationArguments的bean可使用应用的arguments。
+	|--	使用ApplicationRunner或CommandLineRunner
+	|	|--	如果要在SpringApplication启动后立即执行特定代码，可实现此接口。
+	|	|		两个接口都提供了run方法，这个方法将在SpringApplication.run(...)即将完成之前调用。
+	|--	应用退出
+	|	|--	SpringApplication会向JVM注册关闭hook，确保ApplcationContext关闭。
+	|	|		所有Spring支持的生命周期回调都会在这过程中使用。如DisposableBean接口、@PreDestroy注解。
+	|	|--	实现了ExitCodeGenerator接口的bean会在SpringApplication.exit()调用时返回指定的exit码。
+	|	|		exception可实现ExitCodeGenerator接口。当遇到异常时，SpringBoot会返回这个exit码。
+	|--	Admin特性
+	|	|--	通过指定spring.application.admin.enabled属性，可开启admin相关特性。
+	
+配置外部化
+	|--	可使用properties文件、yaml文件、环境变量和命令行参数使配置外部化。
+	|--	Property值的使用方法：
+	|		1.可通过@Value注解直接注入到bean中，
+	|		2.可通过spring的Environment抽象类使用，
+	|		3.可通过@ConfigurationProperties绑定到结构化对象
+	|--	PropertySource的优先级：
+	|	|--	home文件目录里的devtools全局设置properties（~/.spring-boot-devtools.properties）
+	|	|--	测试类的@TestPropertySource注解
+	|	|--	测试类的@SpringBootTest#properties注解属性
+	|	|--	命令行参数
+	|	|--	从SPRING_APPLICATION_JSON中读取的properties（环境变量或系统属性）
+	|	|--	ServletConfig的初始化参数
+	|	|--	ServletContext的初始化参数
+	|	|--	从java:comp/env中获取的JNDI参数
+	|	|--	Java系统参数System.getProperties()
+	|	|--	操作系统environment参数
+	|	|--	A RandomValuePropertySource that only has properties in random.*
+	|	|--	已打包的jar外的profile指定的application properties（application-{profile}.properties|yaml）
+	|	|--	已打包的jar内的profile指定的application properties（application-{profile}.properties|yaml）
+	|	|--	已打包的jar外的application properties（application.properties|yaml）
+	|	|--	已打包的jar内的application properties（application.properties|yaml）
+	|	|--	@Configuration类上的@PropertySource注解
+	|	|--	默认properies（通过SpringApplication.setDefaultProperties指定）	
+	|--	RandomValuePropertySource
+	|	|--	用于注入随机值，可产生integer、long、uuid或string等。
+	|--	Application Property文件
+	|	|--	file:./config/ -> file:./ -> classpath:/config/ -> classpath:/
+	|	|--	spring.config.name指定配置文件的基本名称
+	|	|--	spring.config.location指定配置文件的路径
+	|--	Profile-specific属性
+	|	|--	通过约定名称application-{profile}.properties定义profile-specific属性文件。
+	|	|--	spring.profiles.active属性指定profile
+	|	|--	通过spring.config.location指定文件时，这些文件的profile-specific文件将无法使用。尽量使用指定目录。
+	|--	属性的占位符
+	|	|--	application.properties文件中的值会通过存在的Environment过滤。可使用${}占位。
+	|--	使用YAML代替Properties
+	|	|--	YamlPropertiesFactoryBean会加载YAML为Properties，而YamlMapFactoryBean会加载YAML为Map。
+	|	|--	YamlPropertySourceLoader类将YAML转为Spring的Environment中的PropertySource。
+	|	|--	可在同一个文件中使用spring.profiles定义多个profile-specific的YAML文档
+	|	|	server:
+	|	|	  address: 192.168.1.100
+	|	|	---
+	|	|	spring:
+	|	|	  profiles: development
+	|	|	server:
+	|	|	  address: 127.0.0.1
+	|	|	---
+	|	|	spring:
+	|	|	  profiles: production
+	|	|	server:
+	|	|	  address: 192.168.1.120
+	|	|--	YAML无法使用@PropertySource注解加载。
+	|--	类型安全的配置属性
+	|	|--	使用@Value("${property}")注解注入配置属性有时会很繁杂，尤其是层级结构时。
+	|	|--	通过@ConfigurationProperties(....)注入类型化的bean中
+	|	|		当使用Collection类型时，初始化时设置为final关键字确保是不可改变的。
+	|	|		需在@Configuration类上添加@EnableConfigurationProperties(XXX.class)
+	|	|--	第三方配置
+	|	|		@CongfigurationProperties可用于public @Bean方法上。
+	|	|		这在绑定属性到第三方组件时极为有效。
+	|	|--	宽松绑定：
+	|	|		SpringBoot制定了一些宽松规则来绑定Environment属性到@ConfigurationProperties的bean。
+	|	|		Environment属性名和bean的属性名不必完全匹配。如短线分隔首字母，大写的环境属性
+	|	|--	属性转换
+	|	|		SpringBoot会尝试将属性强制转为@ConfigurationProperties类的正确类型
+	|	|		自定义类型转换：
+	|	|			1.提供id为conversionSservice的ConversionService类型bean
+	|	|			2.通过CustomEditorConfigurer类型的bean自定义属性editor
+	|	|			3.通过注解为@ConfigurationPropertiesBinding的bean定义来自定义Converters
+	|	|--	可使用JSR-303实现@ConfigurationProperties类的校验
+	
+Logging
+	|--	SpringBoot的内部logging使用CommonLogging，但是底层的log实现是开放的。
+	|--	如果终端支持ANSI，可使用彩色输出来提高可读性。设置spring.output.ansi.enabled
+	|		%clr(%5p)
+	|--	文件输出
+	|	|--	SpringBoot默认只会输出日志到控制台而不写入log文件。
+	|	|--	可通过logging.file或logging.path属性设置
+	|--	log等级：logging.level.*=LEVEL  LEVEL可取值TRACE、DEBUG、INFO、WARN、ERROR、FATAL、OFF
+	|--	自定义log配置：
+	|	|--	SpringBoot的各种日志系统可通过添加对应的jar库及定义合适的配置文件或logging.config参数来激活。
+	|	|--	日志在ApplicationContext创建前被初始化，不可通过@Configuration文件读取的@PropertySource控制。
+	|	|	Logback --> logback-spring.xml, logback-spring.groovy, logback.xml, logback.groovy
+	|	|	Log4j2  --> log4j2-spring.xml, log4j2.xml
+	|	|	JDK     --> logging.properties
+	|--	Logback扩展
+	|	|--	<springProfile>标签可根据激活的Spring profile选择包括或排除配置块。
+	|	|--	<springProperty>标签可从Spring的Environment中提取属性供Lobback使用。
+	|	|		<springProperty scope="context" name="fluentHost" source="myapp.fluentd.host" 
+	|	|			defaultValue="localhost"/>
+	
+	
+开发web应用
+	|--	Spring Web MVC
+	|	|--	自动配置
+	|	|		ContentNegotiatingViewResolver和BeanNameViewResolver类型bean的导入
+	|	|		静态资源服务的支持，包括对war的支持
+	|	|		Converter、GenericConverter和Formatter的自动注册
+	|	|		对HttpMessageConverters的支持
+	|	|		自动注册MessageCodesResolver
+	|	|		静态index.html支持
+	|	|		自定义Favicon支持
+	|	|		自动使用ConfigurableWebBindingInitializer的bean
+	|	|--	HttpMessageConverters
+	|	|	|--	SpringMVC使用HttpMessageConverter接口转化HTTP的请求和响应。
+	|	|	|		Object会自动转化为JSON或XML。String默认使用UTF-8进行编码。
+	|	|	|		可通过HttpMessageConverters类添加或自定义转换器。
+	|	|	|		上下文中的任何HttpMessageConverter类型的bean都会自动添加到转换器列表。
+	|	|--	自定义Json序列化和反序列化
+	|	|	|--	Spring Boot提供了可选的@JsonComponent注解用于自定义序列化工具。
+	|	|	|		可以在JsonSerializer和JsonDeserializer实现类上添加@JsonComponent实现。
+	|	|	|		可以在包含内部类serializers/deserializers的类上使用@JsonComponent注解。
+	|	|	|		SpringBoot提供了JsonObjectSerializer和JsonObjectDeserializer基类支持。
+	|	|--	MessageCodesResolver
+	|	|--	静态内容
+	|	|	|--	SpringBoot默认提供静态内容支持位置:
+	|	|	|		1.classpath下的/static或/public或/resources或/META-INF/resources
+	|	|	|		2.ServletContext的根路径
+	|	|	|--	SpringBoot使用ResourceHttpRequestHandler来服务静态内容。
+	|	|	|		可通过添加WebMvcConfigurerAdapter并重写addResourceHandlers方法修改行为。
+	|	|	|--	resources默认会映射到/**，可通过spring.mvc.static-path-pattern来调整。
+	|	|	|		可通过spring.resources.static-locations自定义静态资源的位置。
+	|	|	|--	如果应用被打包为jar时，不要使用src/main/webapp文件夹。
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
 	
 	
 	
