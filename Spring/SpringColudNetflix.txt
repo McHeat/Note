@@ -62,7 +62,12 @@ ServiceDiscovery（Eureka）
 	|	|--	修改Eureka实例的ID
 	|	|		默认Netflix Eureka实例会注册相同的ID和hostname。
 	|	|		Spring Cloud Eureka可通过eureka.instance.instanceId: xxxx来覆盖ID。
-
+	|--	使用EurekaClient
+	|		当添加了@EnableDiscoveryClient或@EnableEurekaClient时，应用就能够从Eureka服务器上发现服务实例。
+	|		通过注入EurekaClient或DiscoveryClient的实例bean来实现。
+	|--	注册服务慢的原因
+	|		直到实例、服务器和客户端在本地缓存中的元数据相同时，服务才会被客户端发现。这通常需要3次心跳。
+	|		默认的心跳时间间隔为30s，可通过eureka.instance.leaseRenewalIntervalInSeconds修改。
 
 
 
