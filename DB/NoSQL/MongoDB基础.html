@@ -1,0 +1,456 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>MongoDB基础</title>
+	<link rel="stylesheet" type="text/css" href="../../css/style.css">
+</head>
+<body>
+<h1>MongoDB基础</h1>
+<hr>
+<h2>一、MongoDB简介</h2>
+<p>MongoDB是由C++语言编写的基于分布式文件存储的开源数据库系统。旨在为WEB应用提供可扩展的高性能数据存储解决方案。MongoDB将数据存储为一个类似于JSON对象的文档，数据结构由键值对组成。字段值可包括其他文档，数组及文档数组。</p>
+<h2>二、MongoDB概念解析</h2>
+<table class="reference">
+	<tr>
+		<th>SQL术语/概念</th>
+		<th>MongoDB术语/概念</th>
+		<th>解释/说明</th>
+	</tr>
+	<tr>
+		<td>database</td>
+		<td>database</td>
+		<td>数据库</td>
+	</tr>
+	<tr>
+		<td>table</td>
+		<td>collection</td>
+		<td>数据库表/集合</td>
+	</tr>
+	<tr>
+		<td>row</td>
+		<td>document</td>
+		<td>数据记录行/文档</td>
+	</tr>
+	<tr>
+		<td>column</td>
+		<td>field</td>
+		<td>数据字段/域</td>
+	</tr>
+		<tr>
+		<td>index</td>
+		<td>index</td>
+		<td>索引</td>
+	</tr>
+	<tr>
+		<td>table joins</td>
+		<td></td>
+		<td>表连接,MongoDB不支持</td>
+	</tr>
+	<tr>
+		<td>primary key</td>
+		<td>primary key</td>
+		<td>主键,MongoDB自动将_id字段设置为主键</td>
+	</tr>
+</table>
+<h4>数据库</h4>
+<p>一个mongodb中可以建立多个数据库。默认数据库为db，存储在data目录下。mongoDB的单个实例可容纳多个独立的数据库，每个由自己的集合和权限，存储在不同的文件中。show dbs命令可显示所有数据库的列表。db命令可显示当前数据库对象或集合。use命令可连接到指定的数据库。</p>
+<ul>
+数据库名可使用满足下述条件的UTF-8字符串：
+<li>不能是空字符串("")</li>
+<li>不得含有空格、.、$、/、\、和空字符(\0)。</li>
+<li>应全部小写。</li>
+<li>最多64字节。</li>
+</ul>
+<p>保留数据库名：admin、local、config.</p>
+<h4>文档</h4>
+<p>文档是一组键值对（即BSON）。文档中不需要设置相同的字段，并且相同的字段不需要相同的数据类型。MongoDB文档中的键值对是有序的，文档的键是字符串且不能有重复。MongoDB区分类型和大小写。</p>
+<ul>文档键命名规范：
+<li>键不能含有\0 (空字符)。这个字符用来表示键的结尾。</li>
+<li>.和$有特别的意义，只有在特定环境下才能使用。</li>
+<li>以下划线"_"开头的键是保留的(不是严格要求的)。</li>
+</ul>
+<h4>集合</h4>
+<p>集合是MongoDB的文档组，类似于RDBMS中的表格。集合位于数据库中，没有固定的结构，可插入不同格式和类型的数据。通常插入集合的数据都会有一定的关联性。当第一个文档插入时，集合就会被创建。</p>
+<ul>合法的集合名:
+<li>集合名不能是空字符串""。</li>
+<li>集合名不能含有\0字符（空字符)，这个字符表示集合名的结尾。</li>
+<li>集合名不能以"system."开头，这是为系统集合保留的前缀。</li>
+<li>用户创建的集合名字不能含有保留字符。</li>
+</ul>
+<p>Capped collections是固定大小的collection。有很高的性能及队列过期的特性，过期按照插入的顺序。这种集合很适合类似记录日志的功能。需显式地创建并指定collection的大小，单位是字节。数据存储空间值提前分配且包含了数据库的头信息。</p>
+	<pre class="prettyprint">db.createCollection("mycoll", {capped:true, size:100000})</pre>
+<ul>
+<li>在capped collection中，你能添加新的对象。</li>
+<li>能进行更新，然而，对象不会增加存储空间。如果增加，更新就会失败 。</li>
+<li>数据库不允许进行删除。使用drop()方法删除collection所有的行。</li>
+<li>注意: 删除之后，你必须显式的重新创建这个collection。</li>
+<li>在32bit机器中，capped collection最大存储为1e9( 1X10<sup>9</sup>)个字节。</li>
+</ul>
+<h4>元数据</h4>
+<p>数据库的信息是存储在集合中，使用了系统的命名空间：</p>
+<pre class="prettyprint">&lt;dbname&gt;.system.*</pre>
+<table class="reference">
+	<tr>
+		<th>集合命名空间</th>
+		<th>描述</th>
+	</tr>
+	<tr>
+		<td>dbname.system.namespaces</td>
+		<td>列出所有名字空间。</td>
+	</tr>
+	<tr>
+		<td>dbname.system.indexes</td>
+		<td>列出所有索引。</td>
+	</tr>
+	<tr>
+		<td>dbname.system.profile</td>
+		<td>包含数据库概要(profile)信息。</td>
+	</tr>
+	<tr>
+		<td>dbname.system.users</td>
+		<td>列出所有可访问数据库的用户。</td>
+	</tr>
+	<tr>
+		<td>dbname.local.sources</td>
+		<td>包含复制对端（slave）的服务器信息和状态。</td>
+	</tr>
+</table>
+<h4>数据类型</h4>
+<table class="reference">
+	<tr>
+		<th>数据类型</th>
+		<th>描述</th>
+	</tr>
+	<tr>
+		<td>String</td>
+		<td>字符串。存储数据常用的数据类型。在 MongoDB 中，UTF-8 编码的字符串才是合法的。</td>
+	</tr>
+	<tr>
+		<td>Integer</td>
+		<td>整型数值。用于存储数值。根据你所采用的服务器，可分为 32 位或 64 位。</td>
+	</tr>
+	<tr>
+		<td>Boolean</td>
+		<td>布尔值。用于存储布尔值（真/假）。</td>
+	</tr>
+	<tr>
+		<td>Double</td>
+		<td>双精度浮点值。用于存储浮点值。</td>
+	</tr>
+	<tr>
+		<td>Min/Max keys</td>
+		<td>将一个值与 BSON（二进制的 JSON）元素的最低值和最高值相对比。</td>
+	</tr>
+	<tr>
+		<td>Array</td>
+		<td>用于将数组或列表或多个值存储为一个键。</td>
+	</tr>
+	<tr>
+		<td>Timestamp</td>
+		<td>时间戳。记录文档修改或添加的具体时间。</td>
+	</tr>
+	<tr>
+		<td>Object</td>
+		<td>用于内嵌文档。</td>
+	</tr>
+	<tr>
+		<td>Null</td>
+		<td>用于创建空值。</td>
+	</tr>
+	<tr>
+		<td>Symbol</td>
+		<td>符号。该数据类型基本上等同于字符串类型，但不同的是，它一般用于采用特殊符号类型的语言</td>
+	</tr>
+	<tr>
+		<td>Date</td>
+		<td>日期时间。用 UNIX 时间格式来存储当前日期或时间。你可以指定自己的日期时间：创建 Date 对象，传入年月日信息。</td>
+	</tr>
+	<tr>
+		<td>Object ID</td>
+		<td>对象 ID。用于创建文档的 ID。</td>
+	</tr>
+	<tr>
+		<td>Binary Data</td>
+		<td>二进制数据。用于存储二进制数据。</td>
+	</tr>
+	<tr>
+		<td>Code</td>
+		<td>代码类型。用于在文档中存储 JavaScript 代码。</td>
+	</tr>
+	<tr>
+		<td>Regular expression</td>
+		<td>正则表达式类型。用于存储正则表达式。</td>
+	</tr>
+</table>
+<h2>三、MongoDB连接</h2>
+<h4>启动MongoDB服务</h4>
+<p>在安装目录下执行mongod即可启动MongoDB服务，之后等待连接，标准URI连接语法：</p>
+<pre class="prettyprint">mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]</pre>
+<p>未设置port时，默认使用27017端口。未指定database时默认打开test数据库。</p>
+<h2>四、MongoDB操作</h2>
+<h4>创建数据库</h4>
+<pre class="prettyprint">use DATABASE_NAME</pre>
+<p>如果数据库不存在，则创建数据库，否则切换到指定数据库。要显示新创建的数据库，需插入一些数据。</p>
+<h4>删除数据库</h4>
+<pre class="prettyprint">db.dropDatabase()</pre>
+<p>删除当前数据库，默认为test。可使用db命令查看当前数据库名。</p>
+<h4>删除集合</h4>
+<pre class="prettyprint">db.collection.drop()</pre>
+<h4>插入文档</h4>
+<pre class="prettyprint">db.COLLECTION_NAME.insert(document)</pre>
+<p>使用db.col.save(document)命令，如果不指定 _id 字段save()方法类似于insert()方法。如果指定_id字段，则会更新该_id的数据。</p>
+<h4>更新文档</h4>
+<p>update()方法用于更新已存在的文档。语法格式如下：</p>
+<pre class="prettyprint">
+	db.collection.update(
+		&lt;query&gt;,
+		&lt;update&gt;,
+		{
+			upsert: &lt;boolean&gt;,
+			multi: &lt;boolean&gt;,
+			writeConcern: &lt;document&gt;
+		}
+	)
+</pre>
+<ul>
+<li><b>query:</b>update的查询条件，类似sql update查询内where后面的条件。</li>
+<li><b>update:</b>update的对象和一些更新的操作符(如$、$inc...)等，类似sql update查询内set后面的内容。</li>
+<li><b>upsert:</b>可选，如果不存在update记录是否插入。true为插入，默认是false不插入。</li>
+<li><b>multi:</b>可选，默认是false，只更新找到的第一条记录，设为true时则更新全部查询到的记录。</li>
+<li><b>writeConcern:</b>可选，抛出异常的级别。</li>
+</ul>
+<p>save()方法通过传入的文档来替换已有的文档。语法格式如下：</p>
+<pre class="prettyprint">
+	db.collection.save(
+		&lt;document&gt;,
+		{
+			writeConcern: &lt;document&gt;
+		}
+	)</pre>
+<ul>
+<li><b>document:</b>文档数据。</li>
+<li><b>writeConcern:</b>可选，抛出异常的级别。</li>
+</ul>
+<h4>删除文档</h4>
+<p>remove()用于移除集合中的数据。在执行之前使用find()判断执行条件是否正确。基本语法格式：</p>
+<pre class="prettyprint">
+	db.collection.remove(
+		&lt;query&gt;,
+		{
+			justOne: &lt;boolean&gt;,
+			writeConcern: &lt;document&gt;
+		}
+	)</pre>
+<ul>
+<li><b>query:</b>（可选）删除的文档的条件。</li>
+<li><b>justOne:</b>（可选）如果设为 true 或 1，则只删除一个文档。</li>
+<li><b>writeConcern:</b>（可选）抛出异常的级别。</li>
+</ul>
+<h4>查询文档</h4>
+<pre class="prettyprint">db.collection.find(query, projection)</pre>
+<ul>
+<li><b>query：</b>可选，使用查询操作符指定查询条件</li>
+<li><b>projection：</b>可选，使用投影操作符指定返回的键。查询时返回文档中所有键值， 只需省略该参数即可（默认省略）。</li>
+</ul>
+<h4>MongoDB与RDBMS Where语句比较</h4>
+<table class="reference">
+<tr>
+<th>操作</th><th>格式</th><th>范例</th><th>RDBMS中的类似语句</th>
+</tr>
+<tr>
+<td>等于</td><td>{&lt;key&gt;:&lt;value&gt;}</td><td>db.col.find({"by":"菜鸟教程"}).pretty()</td><td>where by = '菜鸟教程'</td>
+</tr>
+<tr>
+<td>小于</td><td>{&lt;key&gt;:{$lt:&lt;value&gt;}}</td><td>db.col.find({"likes":{$lt:50}}).pretty()</td><td>where likes &lt; 50</td>
+</tr>
+<tr>
+<td>小于或等于</td><td>{&lt;key&gt;:{$lte:&lt;value&gt;}}</td><td>db.col.find({"likes":{$lte:50}}).pretty()</td><td>where likes &lt;= 50</td>
+</tr>
+<tr>
+<td>大于</td><td>{&lt;key&gt;:{$gt:&Lt;value&gt;}}</td><td>db.col.find({"likes":{$gt:50}}).pretty()</td><td>where likes &gt; 50</td>
+</tr>
+<tr>
+<td>大于或等于</td><td>{&lt;key&gt;:{$gte:&lt;value&gt;}}</td><td>db.col.find({"likes":{$gte:50}}).pretty()</td><td>where likes >= 50</td>
+</tr>
+<tr>
+<td>不等于</td><td>{&lt;key&gt;:{$ne:&lt;value&gt;}}</td><td>db.col.find({"likes":{$ne:50}}).pretty()</td><td>where likes != 50</td>
+</tr>
+</table>
+<h4>AND条件</h4>
+<p>find()方法可传入多个键，每个键以逗号隔开，即常规SQL的AND条件。</p>
+<h4>OR条件</h4>
+<pre class="prettyprint">
+	db.col.find(
+		{$or: [{key1: value1}, {key2:value2}]}
+	).pretty()
+</pre>
+<h4>$type操作符</h4>
+<p>$type操作符是基于BSON类型来检索集合中匹配的数据类型，并返回结果。</p>
+<table class="reference">
+<tr>
+<th>类型</th><th>数字</th><th>备注</th>
+</tr>
+<tr><td>Double</td><td>1</td><td></td></tr>
+<tr><td>String</td><td>2</td><td></td></tr>
+<tr><td>Object</td><td>3</td><td></td></tr>
+<tr><td>Array</td><td>4</td><td></td></tr>
+<tr><td>Binary data</td><td>5</td><td></td></tr>
+<tr><td>Undefined</td><td>6</td><td>已废弃。</td></tr>
+<tr><td>Object id</td><td>7</td><td></td></tr>
+<tr><td>Boolean</td><td>8</td><td></td></tr>
+<tr><td>Date</td><td>9</td><td></td></tr>
+<tr><td>Null</td><td>10</td><td></td></tr>
+<tr><td>Regular Expression</td><td>11</td><td></td></tr>
+<tr><td>JavaScript</td><td>13</td><td></td></tr>
+<tr><td>Symbol</td><td>14</td><td></td></tr>
+<tr><td>JavaScript (with scope)</td><td>15</td><td></td></tr>
+<tr><td>32-bit integer</td><td>16</td><td></td></tr>
+<tr><td>Timestamp</td><td>17</td><td></td></tr>
+<tr><td>64-bit integer</td><td>18</td><td></td></tr>
+<tr><td>Min key</td><td>255</td><td>Query with -1.</td></tr>
+<tr><td>Max key</td><td>127</td><td></td></tr>
+</table>
+<h4>limit()方法</h4>
+<p>limit()方法接受一个数字参数，指定从MongoDB中读取的记录条数。</p>
+<h4>skip()方法</h4>
+<p>skip()方法接受一个数字参数，跳过指定的记录条数。默认参数为0.</p>
+<h4>sort()方法</h4>
+<p>sort()方法通过参数指定排序的字段，使用1和-1来指定排序的方式，其中1为升序排列，而-1用于降序排列。</p>
+<h2>五、索引</h2>
+<p>ensureIndex()方法可创建索引。基本语法格式：</p>
+<pre class="prettyprint">db.COLLECTION_NAME.ensureIndex({KEY:1})</pre>
+<p>key值为创建的索引字段，1为指定按升序创建索引，-1为降序创建索引。</p>
+<table class="reference">
+<tr><th>参数</th><th>类型</th><th>描述</th>
+<tr><td>background</td><td>Boolean</td><td>建索引过程会阻塞其它数据库操作，background可指定以后台方式创建索引，即增加 "background" 可选参数。 "background" 默认值为false。</td></tr>
+<tr><td>unique</td><td>Boolean</td><td>建立的索引是否唯一。指定为true创建唯一索引。默认值为false.</td></tr>
+<tr><td>name</td><td>string</td><td>索引的名称。如果未指定，MongoDB通过连接索引的字段名和排序顺序生成一个索引名称。</td></tr>
+<tr><td>dropDups</td><td>Boolean</td><td>在建立唯一索引时是否删除重复记录,指定 true 创建唯一索引。默认值为 false.</td></tr>
+<tr><td>sparse</td><td>Boolean</td><td>对文档中不存在的字段数据不启用索引；这个参数需要特别注意，如果设置为true的话，在索引字段中不会查询出不包含对应字段的文档.。默认值为 false.</td></tr>
+<tr><td>expireAfterSeconds</td><td>integer</td><td>指定一个以秒为单位的数值，完成 TTL设定，设定集合的生存时间。</td></tr>
+<tr><td>v</td><td>index version</td><td>索引的版本号。默认的索引版本取决于mongod创建索引时运行的版本。</td></tr>
+<tr><td>weights</td><td>document</td><td>索引权重值，数值在 1 到 99,999 之间，表示该索引相对于其他索引字段的得分权重。</td></tr>
+<tr><td>default_language</td><td>string</td><td>对于文本索引，该参数决定了停用词及词干和词器的规则的列表。 默认为英语</td></tr>
+<tr><td>language_override</td><td>string</td><td>对于文本索引，该参数指定了包含在文档中的字段名，语言覆盖默认的language，默认值为 language.
+</table>
+<h2>六、聚合</h2>
+<p>主要用于处理数据（诸如统计平均值、求和等），并返回计算后的数据结果。</p>
+<pre class="prettyprint">db.COLLECTION_NAME.aggregate(AGGREGATE_OPERATION)</pre>
+<table class="reference">
+<tr>
+<th>表达式</th><th>描述</th><th>实例</th>
+</tr>
+<tr><td>$sum</td><td>计算总和。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$sum : "$likes"}}}])</td></tr>
+<tr><td>$avg</td><td>计算平均值</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$avg : "$likes"}}}])</td></tr>
+<tr><td>$min</td><td>获取集合中所有文档对应值得最小值。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$min : "$likes"}}}])</td></tr>
+<tr><td>$max</td><td>获取集合中所有文档对应值得最大值。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$max : "$likes"}}}])</td></tr>
+<tr><td>$push</td><td>在结果文档中插入值到一个数组中。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", url : {$push: "$url"}}}])</td></tr>
+<tr><td>$addToSet</td><td>在结果文档中插入值到一个数组中，但不创建副本。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", url : {$addToSet : "$url"}}}])</td></tr>
+<tr><td>$first</td><td>根据资源文档的排序获取第一个文档数据。</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", first_url : {$first : "$url"}}}])</td></tr>
+<tr><td>$last</td><td>根据资源文档的排序获取最后一个文档数据</td><td>db.mycol.aggregate([{$group : {_id : "$by_user", last_url : {$last : "$url"}}}])</td></tr>
+</table>
+<h4>管道</h4>
+<p>MongoDB的聚合管道将MongoDB文档在一个管道处理完毕后将结果传递给下一个管道处理。管道操作是可以重复的。</p>
+<ul>
+聚合框架中常用的几个操作：
+<li><b>$project:</b>修改输入文档的结构。可用来重命名、增加或删除域，也可用于创建计算结果以及嵌套文档。</li>
+<li><b>$match:</b>用于过滤数据，只输出符合条件的文档。</li>
+<li><b>$limit:</b>用来限制MongoDB聚合管道返回的文档数。</li>
+<li><b>$skip:</b>在聚合管道中跳过指定数量的文档，并返回余下的文档。</li>
+<li><b>$unwind:</b>将文档中的某一个数组类型字段拆分成多条，每条包含数组中的一个值。</li>
+<li><b>$group:</b>将集合中的文档分组，可用于统计结果。</li>
+<li><b>$sort:</b>将输入文档排序后输出。</li>
+<li><b>$geoNear:</b>输出接近某一地理位置的有序文档。</li>
+</ul>
+<h2>七、集群</h2>
+MongoDB集群服务器搭建：<a href="http://www.cnblogs.com/ityouknow/p/7344005.html">点击我</a>
+<h2>八、备份与恢复</h2>
+<p>可使用mongodump命令来备份MongoDB数据，可导出所有数据到指定目录中，可通过参数指定导出的数据量级转存的服务器。语法：</p>
+<pre class="prettyprint">mongodump -h dbhost -d dbname -o dbdirectory</pre>
+<ul>
+<li><b>-h:</b>MongoDB所在服务器地址。</li>
+<li><b>-d:</b>需要备份的数据库实例</li>
+<li><b>-o:</b>备份的数据存放位置，需提前建立。</li>
+</ul>
+<p>使用mongorestore命令来恢复备份的数据。语法：</p>
+<pre class="prettyprint">mongorestore -h &lt;hostname&gt;<:port&gt; -d dbname &lt;path&gt;</pre>
+<ul>
+<li><b>--host<:port>, -h<:port>：</b>MongoDB所在服务器地址，默认localhost:27017</li>
+<li><b>--db, -d:</b>需要恢复的数据库实例，可和备份时的名称不一致</li>
+<li><b>--drop:</b>恢复的时候，先删除当前数据，然后恢复备份的数据</li>
+<li><b>&lt;path&gt;:</b>mongorestore<b>最后</b>的一个参数，设置备份数据所在位置</li>
+<li><b>--dir:</b>指定备份的目录，不能同时指定&lt;path&gt;和--dir选项</li>
+</ul>
+<h2>九、监控</h2>
+<p>MongoDB提供了mongostat和mongotop两个命令监控运行情况。</p>
+<h2>十、MongoDB 关系</h2>
+<p>MongoDB的关系表示多个文档之间在逻辑上的相互联系，文档间可通过嵌入和引用来建立联系。关系可分为：1对1、1对多、多对1和多对多。</p>
+<h4>嵌入式关系</h4>
+<p>数据保存在单一的文档中，可以比较容易的获取和维护数据。缺点是不宜扩展。</p>
+<h4>引用式关系</h4>
+<p>通过引用文档的id字段来建立关系。</p>
+<h2>十一、数据库引用</h2>
+<p>MongoDB引用有两种：手动引用和DBRefs。当一个文档从多个集合中引用文档，应该使用DBRefs。DBRefs的形式：</p>
+<pre class="prettyprint">{ $ref : , $id : , $db :  }</pre>
+<ul>
+<li><b>$ref:</b>集合名称</li>
+<li><b>$id:</b>引用的id</li>
+<li><b>$db:</b>数据库名称，可选参数</li>
+</ul>
+<h2>十二、覆盖索引查询</h2>
+<p>覆盖查询指：所有的查询字段是索引的一部分；所有的查询返回字段在同一个索引中。因为索引存在于RAM中，从索引中读取数据比通过扫描文档读取数据要快得多。如果所有索引字段是一个数组或子文档，则不能使用覆盖索引查询。</p>
+<h2>十三、查询分析</h2>
+<p>查询分析可确保建议的索引是否有效，是查询语句性能分析的重要工具。常用函数为：explain()和hint()。</p>
+<h2>十四、原子操作</h2>
+<p>MongoDB不支持事务，所以不能要求其保证数据的完整性。原子操作常用命令：</p>
+<ul>
+<li><b>$set</b>&nbsp;用来指定一个键并更新键值，若键不存在则创建。</li>
+<pre class="prettyprint">	{ $set: { field: value}}</pre>
+<li><b>$unset</b>&nbsp;用来删除一个键。</li>
+<pre class="prettyprint">	{ $unset: { field : 1} }</pre>
+<li><b>$inc</b>&nbsp;对文档的某个值为数字型的键进行增减的操作。</li>
+<pre class="prettyprint">	{ $inc : { field : value } }</pre>
+<li><b>$push</b>&nbsp;把value追加到field中，field必须为数组类型，不存在时会新增一个数组。</li>
+<pre class="prettyprint">	{ $push : { field : value } }</pre>
+<li><b>$pushAll</b>&nbsp;同$push，只是一次可追加多个值到一个数组字段内。</li>
+<pre class="prettyprint">{ $pushAll : { field : value_array } }</pre>
+<li><b>$pull</b>&nbsp;从数组field内删除一个等于value的值</li>
+<pre class="prettyprint">{ $pull : { field : _value } }</pre>
+<li><b>$addToSet</b>&nbsp;增加一个值到数组内，且只有这个值不在数组内才增加。</li>
+<li><b>$pop</b>&nbsp;删除数组的第一个或最后一个元素</li>
+<pre class="prettyprint">{ $pop : { field : 1 } }</pre>
+<li><b>$rename</b>&nbsp;修改字段名称</li>
+<pre class="prettyprint">{ $rename : { old_field_name : new_field_name } }</pre>
+<li><b>$bit</b>&nbsp;位操作，integer类型</li>
+<pre class="prettyprint">{$bit : { field : {and : 5}}}</pre>
+<li><b>偏移操作符</b></li>
+</ul>
+<h2>十五、高级索引</h2>
+<h4>索引数组字段</h4>
+<p>在数组中创建索引，需要对数组中的每个字段一次建立索引。</p>
+<h4>索引子文档字段</h4>
+<p>创建索引后，可使用子文档的字段来检索数据，查询表达式必须遵循指定的索引的顺序。</p>
+<h2>十六、索引限制</h2>
+<ul>
+<li><b>额外开销</b>&nbsp;每个索引占据一定的存储空间，在进行插入，更新和删除操作时也需要对索引进行操作。</li>
+<li><b>内存(RAM)使用</b>&nbsp;索引是存储在内存(RAM)中,应确保该索引的大小不超过内存的限制。</li>
+<li><b>查询限制</b>&nbsp;不能被正则表达式及非操作符、算术运算符、$where字句</li>
+<li><b></b>&nbsp;</li>
+<li><b></b>&nbsp;</li>
+<li><b></b>&nbsp;</li>
+<li><b></b>&nbsp;</li>
+<li><b></b>&nbsp;</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+<br>
+</body>
+</html>

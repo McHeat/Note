@@ -1,0 +1,68 @@
+body {
+	width: 60%; 
+	margin: auto;
+	background-color: #b9a31242;
+}
+h1 {
+	color: orange;
+	text-align: center;
+}
+p {
+	font-family: "sans-serif";
+	font-size: 16px;
+	text-indent: 2em
+}
+pre {
+	font-family: "sans-serif";
+	font-size: 14px;
+}
+.withborder {
+	border-color: azure;
+	border: 1px solid;
+	border-radius: 5px;
+}
+table.reference, table.tecspec {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 4px;
+    margin-top: 4px;
+}
+table.reference tr:nth-child(even) {
+    background-color: #fff;
+}
+table.reference tr:nth-child(odd) {
+    background-color: #f6f4f0;
+}
+table.reference th {
+    color: #fff;
+    background-color: #555;
+    border: 1px solid #555;
+    font-size: 12px;
+    padding: 3px;
+    vertical-align: top;
+    text-align: left;
+}
+table.reference td {
+    line-height: 2em;
+    min-width: 24px;
+    border: 1px solid #d4d4d4;
+    padding: 5px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    vertical-align: top;
+	font-size: 12px;
+}
+pre {
+    margin: 15px auto;
+    font: 12px/20px Menlo,Monaco,Consolas,"Andale Mono","lucida console","Courier New",monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+    border: 1px solid #ddd;
+    border-left-width: 4px;
+    background: #fbfbfb top;
+    padding: 10px 15px;
+}
+pre.prettyprint {
+    padding: 10px 15px;
+}

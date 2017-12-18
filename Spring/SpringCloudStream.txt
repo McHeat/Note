@@ -26,19 +26,21 @@ SpringCloudStream特性：
 	|--	A pluggable Binder API
 使用SpringCloudStream
 	|--	通过在应用的configuration类上添加@EnableBinding注解绑定MessageBroker
-	|--	@EnableBinding注解可使用多个接口类作为参数，接口中包含代表绑定组件的方法
+	|--	@EnableBinding注解可使用多个Bound接口类（内部使用@Input|@Output注解创建channel）作为参数，接口中包含代表绑定组件的方法
 	|--	@Input&@Output
 	|	|--	在一个接口中可定义任意数量的input|output通道
 	|	|-- 可通过@Input&@Output为channel定义通道名称
-	|	|--	@Source用于指定单一的出站通道
-	|	|--	@Sink用于指定单一的入站通道
-	|	|--	@Processor用于有入站和出站通道的应用
-	|--	使用Channel
-	|	|--	1.注入Bound接口，通过接口获取channel来发送或接收消息
-	|	|--	2.直接注入MessageChannel，通过channel名称来自动装载
+	|	|--	@Source用于指定单一的出站通道，内部使用了@Output注解方法
+	|	|--	@Sink用于指定单一的入站通道，内部使用了@Input注解方法
+	|	|--	@Processor用于有入站和出站通道的应用，继承了Sink和Source接口
+	|--	使用Bound Channel
+	|	|--	1.注入Bound接口，通过接口获取channel来发送或接收消息，如注入Source接口
+	|	|--	2.直接注入MessageChannel，通过channel名称来自动装载，如注入Source接口中的output渠道，可通过指定名称注入
 	|--	发布和消费消息
-	|	|--	可通过SpringIntegration注解或CloudStream的@StreamListener注解
-	|	|		@StreamListener使用了其他的SpringMessage注解并添加了类型管理等特点
+	|	|--	可通过SpringIntegration注解（SpringCloudStream基于此，不作分析）
+	|	|--	通过SpringCloudStream的@StreamListener注解
+	|	|		@StreamListener的扩展类有：@MessageMapping，@JmsListener，@RabbitListener.....
+	|	|		这些扩展类添加了内容类型管理及强制类型等特点
 	|	|--	提供了MessageConverter机制来处理数据类型转化并分发到@StreamListener注解方法
 	|	|		方法的参数可使用@Payload、@Headers和@Header
 	|	|		@SendTo(...)来指定返回结果发送channel
