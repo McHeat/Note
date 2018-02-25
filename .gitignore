@@ -1,0 +1,10 @@
+.idea/
+build/
+bundle/
+dist/
+.gradle/
+logs/
+node_modules/
+.DS_Store
+storage/
+applog/
