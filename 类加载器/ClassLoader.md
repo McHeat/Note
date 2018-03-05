@@ -103,7 +103,7 @@ ClassLoader（类加载器）负责将Class加载到JVM中，主要功能：
  
 #### ClassCastException
  通常在程序中出现强制类型转换时出现这个错误。JVM在做类型转换时检查规则如下：
- + 对于普通对象，对象必需是目标类的实例或目标类的子类的示例。如果目标是一个接口，那么会把它当成实现了该接口的一个子类。
+ + 对于普通对象，对象必需是目标类的实例或目标类的子类的实例。如果目标是一个接口，那么会把它当成实现了该接口的一个子类。
  + 对于数组类类型，目标类必须是数组类型或java.lang.Object、java.lang.Cloneable、java.io.Serializable。  
  
  如果不满足上述规则，JVM会报ClassCastException异常。避免方式：
