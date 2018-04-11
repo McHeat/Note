@@ -31,6 +31,7 @@
  + `exists()`：返回一个boolean值，表示资源是否在物理设备上存在。  
  + `isOpen()`：返回一个boolean值，表示资源是否表示为对已开启流的操作。如果为true，则`InputStream`不能多次读取，只能读取一次然后关闭防止资源泄漏。除了`InputStream` 外，其他所有的resource实现类都是false。
  + `getDescription()`：返回对资源的描述，用于处理资源时的异常输出。通常是文件的全路径名称或资源的实际URL。  
+ 
  如果底层的实现类支持，其他方法允许你获取代表资源的实际`URL`或`File`对象。  
  在Spring中，`Resource`抽象接口应用广泛，在需要时会作为方法签名的一个参数类型。而在Spring API的其他方法（比如各种`ApplicationContext`实现类的构造器）中，通过字符串创建适合context实现类的`Resource`，或者通过字符串路径的指定前缀，允许调用者声明指定的`Resource`实现类必须被创建或使用。  
  `Resource`接口在Spring中使用广泛。即使在你代码中并不使用Spring时，`Resource`本身也是一个处理资源的有效工具类。这会将代码与Spring耦合，但是也仅仅是耦合了`URL`的更丰富的替代工具类集，等价于为这个目的使用的其他jar包。  
