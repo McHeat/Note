@@ -29,6 +29,15 @@
     InputStream getInputStream() throws IOException;
  }
  ```
+ `Resource`接口中的一些重要方法是：  
+ + `getInputStream()`：定位和打开资源，返回从资源中读取到的`InputStream`。
+ 方法的每次调用都应该返回一个新的`InputStream`。调用者必须关闭这个流。  
+ + `exists()`：返回一个boolean值，表示资源是否在物理设备上存在。  
+ + `isOpen()`：返回一个boolean值，表示资源是否表示为对已开启流的操作。
+ 如果为true，则`InputStream`不能多次读取，只能读取一次然后关闭防止资源泄漏。
+ 除了`InputStream` 外，其他所有的resource实现类都是false。
+ + `getDescription()`：返回对资源的描述，用于处理资源时的异常输出。
+ 通常是文件的全路径名称或资源的实际URL.  
  
  
  
