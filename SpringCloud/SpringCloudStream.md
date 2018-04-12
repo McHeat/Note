@@ -1,10 +1,10 @@
-SpringCloudStream:
-	|--	用于构建消息驱动微服务应用的框架
-	|--	@EnableBinding：快速连接到MessageBroker，使用接口作为参数。接口内声明input|output通道
-	|	@StreamListener：接收流处理的事件
-	|	@Input：声明input通道，用于接收消息到应用中
-	|	@Output：声明output通道，用于发送消息到应用外
-SpringCloudStream特性：
+# SpringCloudStream
+ Spring Cloud Stream是用于构建基于消息驱动微服务应用的框架。基于Spring Boot技术，Spring Cloud Stream可创建独立的、产品级的Spring应用，使用Spring Integration来连接消息代理。  
+ `@EnableBinding`：快速连接到MessageBroker，使用接口作为参数。接口内声明input|output通道  
+ `@StreamListener`：接收流处理的事件  
+ `@Input`：声明input通道，用于接收消息到应用中  
+ `@Output`：声明output通道，用于发送消息到应用外  
+## SpringCloudStream特性
 	|--	SpringCloudStream应用模型
 	|	|--	原理：
 	|	|	1.应用使用SpringCloudStream注入的input|output通道与外界交流
