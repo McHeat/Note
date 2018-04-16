@@ -87,7 +87,7 @@ Session和Cookie的作用都是为了保持访问用户与后端服务器的交�
    </tbody>
   </table>
   
- ### Cookie如何工作 ###
+### Cookie如何工作 ###
  创建Cookie：
  ```Java  
  String getCookie(Cookie[] cookies, String key) {
@@ -119,7 +119,49 @@ Session和Cookie的作用都是为了保持访问用户与后端服务器的交�
  在Tomcat中，真正构建Cookie的是在`org.apache.catalina.connector.Respose`类中完成，
  调用`generateCookieString`方法将Cookie对象构造成一个字符串，然后将字符串命名为`Set-Cookie`
  添加到MimeHeaders中。  
+ 每次调用`addCookie`方法时，最终都会创建一个Header,在构建HTTP返回字节流时将Header中所有的项数序写出而没有进行任何修改，
+ 所以浏览器在接受HTTP返回的数据时是分别解析每一个Header项的。当请求某个URL路径时，浏览器会根据URL路径将符合条件的Cookie
+ 放在Request请求头中传回服务端，服务端通过`request.getCookie()`来取得所有Cookie。  
  
+### 使用Cookie的限制 ###
+ Cookie在HTTP中的一个字段，最终存储在浏览器里，所以不同的浏览器对Cookie的存储都有一些限制。  
+ 
+## Session ##
+ 同一个客户端每次和服务端交互时，不需要每次都传回所有的Cookie值，而是只要传回一个ID，这个ID是客户端第一次访问服务器时生成的，
+ 而且每个客户端是唯一的，所以客户端只要传回这个ID就行了，通常是NAME为JSESSIONID的一个Cookie。  
+ 
+### Session工作
+ Session正常工作的三种方式：  
+ + 基于URL Path Parameter，默认支持  
+    当浏览器不支持Cookie功能时，会将用户的SessionCookieName重写到用户请求的URL参数中。
+    传递格式为：/path/Servlet;name=value;name2=value2?name3=value3
+ + 基于Cookie，如果没修改Context容器的Cookies标识，则默认支持  
+    客户端支持Cookie，则Tomcat仍然会解析Cookie中的Session ID，并会覆盖URL中的Session ID。
+ + 基于SSL，默认不支持，只有`connector.getAttribute("SSLEnabled")`为TRUE才支持  
+    根据`javax.servlet.request.ssl_session`属性值设置Session ID。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  
  
  
