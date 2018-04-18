@@ -140,10 +140,22 @@ Session和Cookie的作用都是为了保持访问用户与后端服务器的交�
  + 基于SSL，默认不支持，只有`connector.getAttribute("SSLEnabled")`为TRUE才支持  
     根据`javax.servlet.request.ssl_session`属性值设置Session ID。
 
-
-
-
-
+ 当有了SessionID，服务端就可以创建HttpSession对象，第一次触发是通过`request.getSession()`方法。如果没有对应的HttpSession对象，就会创建新的对象并
+ 添加到`org.apache.catalina.Manager`的sessions容器中保存。`org.apache.catalina.Manager`类的实现类是`org.apache.catalina.session.StandardManager`，
+ 通过requestedSessionId从StandardManager的session集合中取出StandardSession对象。
+ 一个requestedSessionId对应一个访问的客户端，所以一个客户端对一个StandardSession对象，其中保存了Session的值。
+   
+ StandardManager类负责Servlet容器中所有的StandardSession对象的生命周期管理。当Servlet容器关闭时，StandardManager类会调用unload方法将sessions
+ 集合中的StandardSession对象写到"SESSIONS.ser"文件中，然后在启动时重新恢复。持久化session对象必须调用Servlet容器的stop和start命令，
+ 而不能直接结束（kill）Servlet容器的进程。  
+ 
+ 必须给每个Session对象定义一个有效时间，超过这个时间则Session对象将被清除。检查Session是否失效是在Tomcat的一个后台线程中完成，或调用`request.getSession()`
+ 时。
+ 
+##  Cookie安全问题    ##
+ Cookie通过把所有保存的数据通过HTTP头部从客户端传递到服务端，又从服务端再传回客户端，所有数据都存储在客户端的浏览器里，所以Cookie的安全性受到很大的挑战。  
+ 
+ 相比较而言，Session的安全性要高很多，因为Session是将数据保存在服务端，只通过Cookie传递一个SessionID而已，所以Session更适合存储用户隐私和重要的数据。
 
 
 
