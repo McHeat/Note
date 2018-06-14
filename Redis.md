@@ -7,12 +7,13 @@
  ```
  redis-server.exe redis.windows.conf 	# 服务器
  redis-cli.exe -h 127.0.0.1 -p 6379		# 客户端
- ```
+ ```  
+
  Linux
- ```
+```
  ./redis-server redis.conf				# 服务器
  ./redis-cli							# 客户端 
- ```  
+```  
 
 ## Redis入门
 
