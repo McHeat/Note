@@ -1,7 +1,12 @@
 #75. Embedded Web Servers嵌入式网络服务器
-每个Spring Boot web application包括一个嵌入式web server。这个特性就导致了许多“怎样做”的问题，包括如何更改embedded server 以及如何配置 embedded server。本节就回答了此类问题。
+每个Spring Boot网站应用包括一个嵌入式网站服务器。这个特性就导致了许多“怎样做”的问题，
+包括如何更改以及配置内置的服务器。本节就回答了此类问题。
+
 ## 75.1 Use Another Web Server使用另外的网络服务器
-许多 Spring Boot starters 包含默认的embedded containers。`spring-boot-starter-web`包含Tomcat ，通过调用 `spring-boot-starter-tomcat`，但是你也可以使用`spring-boot-starter-jetty` 或 `spring-boot-starter-undertow `。 `spring-boot-starter-webflux` 调用Reactor Netty ，通过调用 `spring-boot-starter-reactor-netty`，可以使用`spring-boot-starter-tomcat`，`spring-boot-starter-jetty`或`spring-boot-starter-undertow `作为替代。
+许多 Spring Boot的starter包含默认的内置Container。`spring-boot-starter-web`包含Tomcat，
+通过调用`spring-boot-starter-tomcat`，但是你也可以使用`spring-boot-starter-jetty` 
+或 `spring-boot-starter-undertow `。 `spring-boot-starter-webflux` 调用Reactor Netty ，通过调用 `spring-boot-starter-reactor-netty`，
+可以使用`spring-boot-starter-tomcat`，`spring-boot-starter-jetty`或`spring-boot-starter-undertow `作为替代。
 
 [Note]
 许多starters仅支持Spring MVC, 因此它们可传递性地将`spring-boot-starter-web` 带到你程序的classpath中。
@@ -10,7 +15,7 @@
 
  下列Maven example 展示了为Spring MVC如何exclude Tomcat 以及 include Jetty ：
 
-```
+```xml
 <dependency>
 	<groupId>org.springframework.boot</groupId>
 	<artifactId>spring-boot-starter-web</artifactId>
@@ -22,6 +27,7 @@
 		</exclusion>
 	</exclusions>
 </dependency>
+
 <!-- Use Jetty instead -->
 <dependency>
 	<groupId>org.springframework.boot</groupId>
@@ -31,7 +37,8 @@
 ```
 
 下面的 Gradle example展示了为Spring WebFlux如何 exclude Netty 以及 include Undertow  :
-```java
+
+```groovy
 configurations {
 	// exclude Reactor Netty
 	compile.exclude module: 'spring-boot-starter-reactor-netty'
