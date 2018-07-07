@@ -10,7 +10,7 @@
 ### 1. Maven构建
 #### 1.1 通过继承starter parent
  此方法可使用starter的依赖管理和插件管理
- ```
+ ```xml
     <!-- Inherit defaults from Spring Boot -->
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -27,7 +27,7 @@
  ```
 #### 1.2 通过dependencies管理依赖  
  此方法可使用dependencies的依赖管理，但是无法使用插件管理。
- ```
+ ```xml
     <dependencyManagement>                                             
         <dependencies>                                                 
             <dependency>                                               
@@ -41,17 +41,41 @@
         </dependencies>                                                
     </dependencyManagement>                                            
  ```
- 使用这种设置，你将无法通过重写属性方式替换某个依赖。为了达到同样效果，你需要在dependencyManagement标签下`spring-boot-dependecies`实体***之前***添加对应的dependency实体。
+ 使用这种设置，你将无法像之前描述的一样通过重写属性方式替换某个依赖。为了达到同样效果，你需要在`dependencyManagement`标签下`spring-boot-dependecies`实体**之前**添加对应的dependency实体。
+ 例如，为了升级到SpringData的其他发布版，可以在`pom.xml`中添加下列元素：  
+ 
+```xml
+<dependencyManagement>
+	<dependencies>
+		<!-- Override Spring Data release train provided by Spring Boot -->
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-releasetrain</artifactId>
+			<version>Fowler-SR2</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-dependencies</artifactId>
+			<version>2.0.3.RELEASE</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+```
+ 
 #### 1.3 修改Java版本
  `spring-boot-starter-parent`选择了相当保守的Java适配性。可通过`java.version`属性使用其他版本：
- ```
+ ```xml
  <properties>
      <java.version>1.8</java.version>
  </properties>
  ``` 
 #### 1.4 使用Spring Boot Maven插件
  Spring Boot包含了一个用于打包可执行jar的Maven插件。通过在<plugins>标签下添加来使用：
- ```
+ ```xml
  <build>
      <plugins>
          <plugin>

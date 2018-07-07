@@ -24,12 +24,14 @@
      </build>
  </project>
  ```
+ 
  这个配置将会重新将在maven生命周期的`package`阶段构建的jar或war重新打包。在`target`目录下，会显示新的打包结果：
  ```
  $ mvn package
  $ ls target/*.jar
  target/myproject-1.0.0.jar target/myproject-1.0.0.jar.original
  ```
+ 
  如果配置中不添加上述的`<excution/>`配置，可单独运行插件（同时必须执行package）。
  ```
  $ mvn package spring-boot:repackage
