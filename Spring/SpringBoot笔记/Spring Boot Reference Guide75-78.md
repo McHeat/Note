@@ -1,19 +1,18 @@
-#75. Embedded Web Servers嵌入式网络服务器
+# 75. Embedded Web Servers嵌入式网络服务器  
 每个Spring Boot网站应用包括一个嵌入式网站服务器。这个特性就导致了许多“怎样做”的问题，
 包括如何更改以及配置内置的服务器。本节就回答了此类问题。
 
 ## 75.1 Use Another Web Server使用另外的网络服务器
-许多 Spring Boot的starter包含默认的内置Container。`spring-boot-starter-web`包含Tomcat，
-通过调用`spring-boot-starter-tomcat`，但是你也可以使用`spring-boot-starter-jetty` 
-或 `spring-boot-starter-undertow `。 `spring-boot-starter-webflux` 调用Reactor Netty ，通过调用 `spring-boot-starter-reactor-netty`，
-可以使用`spring-boot-starter-tomcat`，`spring-boot-starter-jetty`或`spring-boot-starter-undertow `作为替代。
+许多 Spring Boot的starter包含默认的内置Container。  
++ 对于servlet栈应用，`spring-boot-starter-web`通过引入`spring-boot-starter-tomcat`使用Tomcat。但是你也可以使用`spring-boot-starter-jetty` 
+或 `spring-boot-starter-undertow `来代替。   
++ 对于响应式栈应用，`spring-boot-starter-webflux`通过引入`spring-boot-starter-reactor-netty`使用Reactor Netty。
+但是你也可以使用`spring-boot-starter-tomcat`，`spring-boot-starter-jetty`或`spring-boot-starter-undertow`作为替代。
 
-[Note]
-许多starters仅支持Spring MVC, 因此它们可传递性地将`spring-boot-starter-web` 带到你程序的classpath中。
+如果需要使用不同的HTTP服务器，就需要你排除默认的依赖项并加入所需的那一个。
+Spring Boot为HTTP servers分别提供starter以便使程序尽可能的简单。  
 
-如果需要使用不同的 HTTP server，就需要你拒绝（exclude ）默认的 dependencies 并允许（ include ）所需的那一个。Spring Boot 为HTTP servers提供单独的 starters 用以使程序尽可能的简单。
-
- 下列Maven example 展示了为Spring MVC如何exclude Tomcat 以及 include Jetty ：
+ 下列Maven示例展示了Spring MVC如何将Tomcat替换为Jetty：  
 
 ```xml
 <dependency>
@@ -36,7 +35,7 @@
 
 ```
 
-下面的 Gradle example展示了为Spring WebFlux如何 exclude Netty 以及 include Undertow  :
+下面的 Gradle示例展示了Spring WebFlux中将Netty替换为Undertow：  
 
 ```groovy
 configurations {
@@ -52,15 +51,16 @@ dependencies {
 }
 ```
 
-[Note]
-`spring-boot-starter-reactor-netty`需要使用 `WebClient `class，因此你需要为Netty保留一个dependency 即使你需要调用不同的  HTTP server。
+> `spring-boot-starter-reactor-netty`会用到`WebClient`类，因此即使你需要调用不同的HTTP服务器也得为Netty保留依赖项。  
 
-((##75.2 Disabling the Web Server（2.0.1版本中没有）
- 如果你的classpath 包含启动web server的 necessary bits，Spring Boot 将会自动启动它 。想要使此行为失效，可以在你的`application.properties`中如下配置 `WebApplicationType`：
+## 75.2 Disabling the Web Server
+ 如果你的类路径中包含web服务器，Spring Boot将会自动启动它。想要使此行为失效，
+ 可以在你的`application.properties`中如下配置 `WebApplicationType`属性：    
+```yaml
+spring.main.web-application-type=none
+```
 
-`spring.main.web-application-type`=none))
-
-##75.2 Configure Jetty
+## 75.2 Configure Jetty
 一般你可以参照74.8章[ “Section 74.8, “Discover Built-in Options for External Properties”” ]中关于 `@ConfigurationProperties` 的内容(`ServerProperties` 是最主要的内容)。然而，你也应该查看[`WebServerFactoryCustomizer`](https://docs.spring.io/spring-boot/docs/2.0.1.RELEASE/api/org/springframework/boot/web/server/WebServerFactoryCustomizer.html)。Jetty APIs是相当丰富的，因此一旦你可以使用`JettyServletWebServerFactory`，就可以使用很多种方法来改变它。另一方面如果你需要更多的控制与定制，你可以添加自己的`JettyServletWebServerFactory`。
 
 
