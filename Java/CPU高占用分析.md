@@ -8,3 +8,7 @@
 `echo "obase=16;PID" | bc`
 5. 通过16进制的线程PID在步骤2中导出的线程栈文件中查找线程栈信息
 6. 分析负载高的线程栈的业务操作，优化程序并处理问题  
+
+
+## 统计线程状态的命令
+`grep java.lang.Thread.State dump | awk '{print $2$3$4$5}' | sort | uniq -c`
