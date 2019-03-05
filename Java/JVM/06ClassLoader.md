@@ -8,7 +8,7 @@ ClassLoader（类加载器）负责将Class加载到JVM中，主要功能：
 ## 一、类结构分析
 
  使用或扩展ClassLoader主要会用到的方法：
- ![ClassLoader类主要结构信息](https://raw.githubusercontent.com/McHeat/Note/master/img/classloader/ClassLoader01.JPG)
+ ![ClassLoader类主要结构信息](../img/classloader/ClassLoader01.JPG)
  
  + ***defineClass*** \
    将byte字节流解析成JVM能够识别的CLass对象
