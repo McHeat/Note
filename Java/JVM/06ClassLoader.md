@@ -30,25 +30,22 @@ ClassLoader（类加载器）负责将Class加载到JVM中，主要功能：
  上一级接待室根据接待规则执行同样的处理方法。直到有一级接待室接待或者告诉它下一级这个会员不是自己接待的结果。
 
  整个JVM平台提供三层ClassLoader:  
- + ***Bootstrap ClassLoader*** \
-   主要加载JVM自身工作需要的类，完全是由JVM自己控制，既没有更高一级的父加载器，也没有子加载器。
- + ***ExtClassLoader*** \
-   是JVM自身的一部分，服务的特定目标在`System.getProperty("java.ext.dirs")`目录下。
- + ***AppClassLoader*** \
+ + ***Bootstrap ClassLoader***  
+   主要加载JVM自身工作需要的类，完全是由JVM自己控制，既没有更高一级的父加载器，也没有子加载器。*Bootstrap ClassLoader*不属于JVM的类等级层次，且没有子类。  
+ + ***ExtClassLoader***  
+   是JVM自身的一部分，服务的特定目标在`System.getProperty("java.ext.dirs")`目录下。*ExtClassLoader*没有父类，是应用中的顶层父类。  
+ + ***AppClassLoader***  
    父类是ExtClassLoader，所有在`System.getProperty("java.class.path")`目录下的类都可以被加载，这个目录就是classpath。  
-     
-自定义的类加载器，无论是直接实现抽象类ClassLoader，还是继承URLClassLoader类或者其他子类， 父加载器都是AppClassLoader，因为不管调用哪个父类构造器，创建的对象都必须最终调用```getSystemClassLoader()```作为父加载器，而这方法获取的正是AppClassLoader。  
-   
- Bootstrap ClassLoader不属于JVM的类等级层次，且没有子类。  
- ExtClassLoader的父类不是Bootstrap ClassLoader，ExtClassLoader并没有父类，是应用中的顶层父类。  
- ExtClassLoader和AppClassLoader都位于sun.misc.Launcher类中，是Launcher的内部类。 
- 在创建Launcher对象时首先会创建ExtClassLoader，然后ExtClassLoader对象作为父加载器创建AppClassLoader对象， 
- 通过Launcher.getClassLoader()方法获取的ClassLoader就是AppClassLoader对象。 如果在Java应用中没有定义其他ClassLoader，那么除了System.getProperty("java.ext.dirs")目录下的类是由ExtClassLoader加载外，其他类都由AppClassLoader来加载。  
+ + ***自定义的类加载器***  
+ 自定义的类加载器，无论是直接实现抽象类ClassLoader，还是继承URLClassLoader类或者其他子类， 父加载器都是AppClassLoader。因为不管调用哪个父类构造器，创建的对象都必须最终调用`getSystemClassLoader()`获取到AppClassLoader作为父加载器。  
+ 
+ ExtClassLoader和AppClassLoader都位于`sun.misc.Launcher`类中，是Launcher的内部类。在创建Launcher对象时首先会创建`ExtClassLoader`，然后`ExtClassLoader`对象作为父加载器创建`AppClassLoader`对象，通过`Launcher.getClassLoader()`方法获取的ClassLoader就是AppClassLoader对象。   
+ 如果在Java应用中没有定义其他ClassLoader，那么除了`System.getProperty("java.ext.dirs")`目录下的类是由ExtClassLoader加载外，其他类都由AppClassLoader来加载。  
       
  JVM加载class文件到内存有两种方式：
- - 隐式加载  
+ - **隐式加载**  
    不通过在代码里调用ClassLoader来加载需要的类，而是通过JVM来自动加载需要的类到内存的方式。
- - 显式加载  
+ - **显式加载**  
    在代码中通过调用ClassLoader类来加载一个类的方式。
    
 ## 三、如何加载class文件
@@ -58,15 +55,14 @@ ClassLoader（类加载器）负责将Class加载到JVM中，主要功能：
   第三阶段：类中静态属性和初始化赋值，以及静态块的执行等  
   
 #### 加载字节码到内存
- 抽象类ClassLoader中没有定义如何找到指定类并把字节码加载到内存中，这需要子类的findClass()方法来实现。在`URLClassLoader`中通过一个`URLClassPath`类帮助取得要加载的class文件字节流，
- `URLClassPath`定义了在哪里查找class文件并读取byte字节流，通过调用defineClass()方法来创建类对象。  
- 想要创建`URLClassLoader`对象，必须要指定一个URL数组，也就是必须指定ClassLoader默认到哪个目录下去查找class文件。URL数组也是创建`URLClassPath`对象的必要条件。
- 创建`URLClassPath`对象时，会根据URL数组中的路径判断是文件还是jar包，根据路径不同分别创建`FileLoader`或`JarLoader`，或者使用默认的加载器。
- JVM调用findClass时由这几个加载器来将class文件的字节码加载到内存中。  
+抽象类ClassLoader中通过子类的findClass()方法来实现如何找到指定类并把字节码加载到内存中。  
+在`URLClassLoader`中通过一个`URLClassPath`类帮助取得要加载的class文件字节流，`URLClassPath`定义了在哪里查找class文件并读取byte字节流，通过调用defineClass()方法来创建类对象。  
+想要创建`URLClassLoader`对象，必须要指定一个URL数组，指定ClassLoader默认到哪个目录下去查找class文件。URL数组也是创建`URLClassPath`对象的必要条件。创建`URLClassPath`对象时，会根据URL数组中的路径判断是文件还是jar包，根据路径不同分别创建`FileLoader`或`JarLoader`，或者使用默认的加载器。
+JVM调用findClass时由这几个加载器来将class文件的字节码加载到内存中。  
 
  | ClassLoader类型 | 参数项 | 说明 |
  | :-------------- | :------------- | :------------------------ | 
- | Bootstrap ClassLoader | -Xbootclasspath[/a][/p]: | 设置Bootstrap ClassLoader的搜索路径 (a代表把路径添加到已存在的后面，p代表添加到前面) |
+ | Bootstrap ClassLoader | -Xbootclasspath[/a][/p]: | 设置Bootstrap ClassLoader的搜索路径(a代表把路径添加到已存在的后面，p代表添加到前面) |
  | ExtClassLoader | -Djava.ext.dirs | 设置ExtClassLoader的搜索路径 |
  | AppClassLoader | -Djava.class.path= 或 -cp 或 -classpath | 设置AppClassLoader的搜索路径 |
 
