@@ -97,7 +97,47 @@ a[i], a[j] = a[j], a[i]   -- 交换a[i]和a[j]
 #### 索引
 对table的索引使用方括号`[]`，同时也提供了`.`操作。  
 
+---
+#### 循环
 
++ `while`循环  
+
+   ```lua
+   while(condition)
+   do
+     statements
+   end
+   ```
++ `for`循环  
+
+   ```lua
+   -- 数值for循环
+   for var=exp1,exp2,exp3 do  
+       <执行体>  
+   end  
+
+   -- 泛型for循环
+   a = {"one", "two", "three"}
+   for i, v in ipairs(a) do
+       print(i, v)
+   end 
+   ```
++ `repeat ... until`循环  
+  
+  ```lua
+  repeat
+    statements
+  until(condition)
+  ```
++ 循环嵌套  
+
+可通过`break`语句退出当前循环或语句，并开始脚本执行紧接着的语句。  
+
+---
+#### 流程控制
+通过`if`语句或`if...else`控制语句可选择的执行指定代码。  
+控制结构的条件表达式结果可以是任何值，Lua认为false和nil是假，true和非nil为真。  
+> 在Lua中0为true。
 
 
 
