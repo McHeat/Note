@@ -139,11 +139,77 @@ a[i], a[j] = a[j], a[i]   -- 交换a[i]和a[j]
 控制结构的条件表达式结果可以是任何值，Lua认为false和nil是假，true和非nil为真。  
 > 在Lua中0为true。
 
+---
+#### 函数
+函数的定义格式：  
 
+```lua
+optional_function_scope function function_name( argument1, argument2, argument3..., argumentn)
+    function_body
+    return result_params_comma_separated
+end
+```
 
++ `optional_function_scope`：未设置该参数默认为全局函数，使用关键字local可变更为局部函数
++ `function_name`：指定函数名称
++ `argument1, argument2, argument3..., argumentn`：函数参数，可为空
++ `function_body`：函数体，函数中需要执行的代码语句块
++ `result_params_comma_separated`：函数返回值，可返回多个值，每个值以逗号隔开
 
+#### 可变参数
+Lua函数可接受可变数目的参数，在函数参数列表中使用三个点`...`标识函数值有可变的参数。  
+可以通过`select('#', ...)`获取可变参数的数量；也可将可变参数赋值给一个变量，如`local arg = {...}`。  
+当固定参数和可变参数共存时，固定参数必须放在可变参数之前。  
 
+---
+#### 运算符
 
++ 算术运算符  
+  加法：`+` 减法：`-` 乘法：`*` 除法：`/` 取余：`%` 乘幂：`^` 负号：`-`
++ 关系运算符  
+  等于：`=` 不等于：`~=` 大于：`>` 小于：`<` 大于等于：`>=` 小于等于：`<=`
++ 逻辑运算符  
+  逻辑与：`and` 逻辑或：`or` 逻辑非：`not`
++ 其他运算符  
+  - `..`：连接字符串
+  - `#`：一元运算符，返回字符串或表的长度  
+
+#### 运算符优先级
+优先级从高到低的顺序：  
+```lua
+^
+not -(一元运算符)
+* /
++ -
+..
+< > <= >= ~= ==
+and
+or
+```
+
+---
+#### 字符串
+Lua中字符串可以使用以下三种方式标识：  
+
++ 单引号间的一串字符
++ 双引号间的一串字符
++ [[和]]间的一串字符  
+
+#### 字符串操作
+
+| 方法 | 用途 |
+| :--: | :--: |
+| `string.upper(arg)` | 字符串全部转为大写字母 |
+| `string.lower(arg)` | 字符串全部转为小写字母 |
+| `string.gsub(mainStr, findStr, replaceStr, num)` | 字符串替换，mainStr为要替换的字符串，findStr为被替换的字符，replaceStr为替换后的字符，num为替换次数 | 
+| `string.find(str, substr, [init, [end]])` | 在指定的字符串中搜索指定内容（init-end为索引），返回其具体位置，不存在则返回nil。 |
+| `string.reverse(arg)` | 字符串反转 |
+| `string.format(...)` | 返回类似printf的格式化字符串 |
+| `string.char(arg...)`和`stirng.byte(arg[,int])` | char将整型数字转成字符并连接，byte转换字符为整数型 |
+| `string.len(arg)` | 计算字符串长度 |
+| `string.rep(str, n)` | 返回字符串str的n个拷贝 |
+| `string.gmatch(str, pattern)` | 返回一个迭代器函数，每一次调用返回一个在字符串str找到的下一个符合pattern描述的子串，如果没找到则返回nil。 |
+| `string.match(str, pattern[, init])` | 只寻找源字符串str的第一个配对。 |
 
 
 
