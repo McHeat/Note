@@ -1,4 +1,4 @@
-# Lua学习
+``# Lua学习
 
 ## Mac Os X系统安装
 ```bash
@@ -213,10 +213,297 @@ Lua中字符串可以使用以下三种方式标识：
 
 ---
 #### Lua数组
-
 数组是相同数据类型的元素按一定顺序排列的集合，可以是一维数组和多维数组。通过`a = {}`声明。  
+多维数组即数组中包含数组或一维数组的索引键对应一个数组。  
 
-  
+---
+### 迭代器
+迭代器是一种对象，能够用来遍历**标准模板库容器**中的部分或全部元素，每个迭代器代表容器中的确定的地址。   
+#### 泛型for迭代器
+泛型for在自己内部保存迭代函数，实际上保存三个值：**迭代函数**、**状态常量**、**控制变量**。  
+泛型for迭代器提供了集合的key/value对，语法格式如下：  
+```lua
+for k,v in pairs(t) do
+  print(k,v)
+end
+```
+
+在Lua中常常使用函数来描述迭代器，每次调用该函数返回集合的下一个元素。Lua的迭代器包含以下两个类型：  
++ **无状态的迭代器**
++ **多状态的迭代器**
+
+#### 无状态的迭代器
+无状态的迭代器是指不保留任何状态的迭代器，在循环中可避免创建闭包花费额外的代价。  
+每一次迭代，迭代函数都是用两个变量（状态常量和控制变量）的值作为参数被调用。一个屋状态的迭代器只利用这两个值可以获取下一个元素，比如ipairs函数。
+
+#### 多状态的迭代器
+迭代器需要保存多个状态信息而不是简单的状态常量和控制变量时，可通过闭包或吧所有的状态信息封装到table内。  
+
+```lua
+array = {"Google", "Runoob"}
+
+function elementIterator (collection)
+   local index = 0
+   local count = #collection
+   -- 闭包函数
+   return function ()
+      index = index + 1
+      if index <= count
+      then
+         --  返回迭代器的当前元素
+         return collection[index]
+      end
+   end
+end
+
+for element in elementIterator(array)
+do
+   print(element)
+end
+```
+
+---
+# Lua表
+table是Lua的一种数据结构，可以用来创建不同的数据类型，如：数组、字典等。
++ 使用关联型数组，可以用任意类型的值类作数组的索引，但不可以是nil。  
++ 不固定大小的，可以根据需要进行扩容。  
++ Lua可以通过table来解决模块(module)、包(package)和对象(Object)。  
+
+| 方法 | 描述 |
+| :--: | :--: |
+| `table.concat(table[, sep [, start [, end]]])` | 列出参数中指定table的数组部分从start位置到end位置的所有元素，元素间以指定的分隔符(sep)隔开。 |
+| `table.insert(table, [pos,] value)` | 在table的数组部分指定位置pos插入值未value的一个元素。pos可选，默认为数组部分的末尾。 |
+| `table.remove(table [, pos])` | 返回table数组部分位于pos位置的元素，其后的元素会被前移。pos可选，默认从最后一个元素删除。 |
+| `table.sort(table [, comp])` | 对给定的table进行升序排序。 | 
+
+
+---
+# Lua模块与包
+
+### 模块
+模块类似于封装库，可以把一些公用的代码放在一个文件中，以API接口的形式在其他地方调用，有利于代码的重用和降低代码耦合度。  
+
+Lua的模块是由变量、函数等已知元素组成的table，文件代码格式如下：  
+
+```lua
+-- 文件名为 module.lua
+-- 定义一个名为 module 的模块
+module = {}
+ 
+-- 定义一个常量
+module.constant = "这是一个常量"
+ 
+-- 定义一个函数
+function module.func1()
+    io.write("这是一个公有函数！\n")
+end
+ 
+local function func2()
+    print("这是一个私有函数！")
+end
+ 
+function module.func3()
+    func2()
+end
+ 
+return module
+```
+
+### require函数
+Lua通过require函数加载模块：
+```lua
+-- 方式一
+require("<模块名称>")
+-- 方式二
+require "<模块名称>"
+-- 别名
+local m = require("<模块名称>")
+```
+
+### 加载机制
+`require`用于搜索Lua文件的路径存放在全局变量`package.path`中，当Lua启动后，以环境变量`LUA_PATH`的值来初始化该变量。如果找到目标文件，则调用`package.loadfile`来加载模块。  
+如果未找到，则会查找C程序库，搜索的文件路径是从全局变量`package.cpath`获取，变量通过环境变量`LUA_CPATH`初始化，如果找到则通过`package.loadlib`来加载。  
+
+### Lua元表(Metatable)
+**元表**：对table操作进行扩展的表，元表里面填的是元方法。可通过`setmetatable(mytable,mymetatable)`函数操作把表和元表进行绑定，这样表(mytable)就有了你自定义的功能。
+
++ `setmetatable(table, metatable)`：对指定table设置元表(metatable)，如果元表(metatable)中存在`__metatable`键值，setmetatable会失败。
++ `getmetatable(table)`：返回对象的元表(metatable)。  
+
+#### __index元方法
+__index则用来对表访问  
+
++ 当通过键访问table的时候，如果键没有对应的值，Lua会寻找table的metatable中的__index键。
++ 如果__index包含一个表格，Lua会在表格中查找相应的键。  
++ 如果__index包含一个函数的话，Lua会调用函数，table和键作为参数传递给函数。  
+
+#### __newindex元方法
+__newindex 元方法用来对表更新  
+
++ 对表进行赋值，如果索引存在，则执行赋值操作
++ 如果索引不存在，则查找__newindex元方法并调用
+
+#### 操作符
+
+| 模式 | 描述 |
+| :-- | :--: |
+| `__add` | 对应`+` |
+| `__sub` | 对应`-` |
+| `__mul` | 对应`*` |
+| `__div` | 对应`/` |
+| `__mod` | 对应`%` |
+| `__unm` | 对应`-` |
+| `__concat` | 对应`..` |
+| `__eq` | 对应`==` |
+| `__lt` | 对应`<` |
+| `__le` | 对应`<=` |
+
+#### __call元方法
+将table作为函数使用，并传递参数及返回自定义结果。  
+```lua
+mytable = {"C#","PHP","Java","Python"}
+
+mymetatable = {
+--第一个参数是mytable表,其他的是函数的参数,参数可以是表
+__call = function(tab,arg1,arg2)
+  print(arg1.." - " ..arg2)
+  return arg1*arg2,arg1/arg2
+end
+
+}
+--设置元表
+mytable = setmetatable(mytable,mymetatable)
+
+a , b = mytable(10,5) -- 10 - 5 
+print(a) -- 50
+print(b) -- 2
+```
+
+#### __tostring元方法
+用于修改表的输出行为。  
+
+---
+# Lua协同程序(coroutine)
+Lua协同类似于线程：拥有独立的堆栈，独立的局部变量，独立的指令指针，可与其他协程共享全局变量和其他大部分东西。  
+
+在任一指定时刻只有一个协程在运行，并且这个正在运行的协程只有在明确的被要求挂起的时候才会被挂起。（类似同步的多线程）  
+
+| 方法 | 描述 |
+| :--: | :--: |
+| `coroutine.create()` | 创建coroutine，返回coroutine，参数是一个函数，当和resume配合使用时唤醒函数调用 |
+| `coroutine.resume()` | 重启coroutine，和create配合使用 |
+| `coroutine.yield()` | 挂起coroutine，将coroutine设置为挂起状态 |
+| `coroutine.status()` | 查看coroutine状态，状态有三种：dead、suspended、running |
+| `coroutine.wrap()` | 创建coroutine，返回一个函数，调用该函数就进入coroutine |
+| `coroutine.running()` | 返回正在运行的coroutine的线程号 |
+
+
+---
+# Lua文件I/O
+Lua I/O库用于读取和处理文件，分为简单模式、完全模式：  
++ **简单模式**：拥有一个当前输入文件和一个当前输出文件，并且提供针对这些文件相关的操作。  
++ **完全模式**：使用外部的文件句柄来实现，以一种面向对象的形式，将所有的文件操作定义为文件句柄的方法。  
+
+```lua
+file = io.open(filename [, mode])  -- 打开文件
+```
+mode的值：
+
+| 模式 | 描述 |
+| :--: | :--: |
+| `r` | 以只读方式打开文件，文件必须存在。 |
+| `w` | 打开只写文件，文件存在则文件长度清零，内容消失。文件不存在则建立文件。 |
+| `a` | 以附加的方式打开只写文件。文件不存在则创建；文件存在则保留原内容并追加到文件尾。 |
+| `r+` | 以可读写的方式打开文件，文件必须存在。 |
+| `w+` | 打开可读写文件，若文件存在则文件长度清零，文件内容消失。文件不存在则建立该文件。 |
+| `a+` | 与a类似，但文件可读可写。 |
+| `b` | 二进制模式，如果文件是二进制文件可以使用b。 |
+| `+` | 表示对文件可读可写。 |
+
+### 简单模式
+简单模式使用标准的I/O使用一个当前输入文件和一个当前输出文件。
+```lua
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 设置默认输入文件为 test.lua
+io.input(file)
+
+-- 输出文件第一行
+print(io.read())
+
+-- 关闭打开的文件
+io.close(file)
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 设置默认输出文件为 test.lua
+io.output(file)
+
+-- 在文件最后一行添加 Lua 注释
+io.write("--  test.lua 文件末尾注释")
+
+-- 关闭打开的文件
+io.close(file)
+```
+
+### 完全模式
+当需要在同一时间处理多个文件时，使用filename:function_name代替io.function_name方法：  
+```lua
+-- 以只读方式打开文件
+file = io.open("test.lua", "r")
+
+-- 输出文件第一行
+print(file:read())
+
+-- 关闭打开的文件
+file:close()
+
+-- 以附加的方式打开只写文件
+file = io.open("test.lua", "a")
+
+-- 在文件最后一行添加 Lua 注释
+file:write("--test")
+
+-- 关闭打开的文件
+file:close()
+```
+
+---
+# Lua错误处理
+Lua中可使用两个函数：`asset`和`error`来处理错误。
+```lua
+-- 检查第一个参数，存在问题则把第二个参数作为错误信息抛出
+assert(type(a) == "number", "a不是一个数字")
+-- 终止正在执行的函数，并返回message的内容作为错误信息
+error(message [, level])
+```
+
+Lua中处理错误，可以使用函数`pcall(protected call, ...)`来包装需要执行的代码。pcall接收一个函数和要传递给后者的参数，并执行，执行结果：有错误、无错误哦，返回值为true、false或errorinfo。  
+```lua
+if pcall(function_name, ….) then
+-- 没有错误
+else
+-- 一些错误
+end
+```  
+
+`xpcall(protected call, error handler, ..)`函数接收的第二个参数是一个错误处理函数，错误发生时Lua在调用栈展开前调用错误处理函数。  
++ `debug.debug`  
+  提供一个Lua提示符，供用户来检查错误的原因。
++ `debug.traceback`  
+  根据调用栈来构建一个扩展的错误信息。
+
+
+
+
+
+
+
+
+
+
 
 
 
