@@ -481,19 +481,75 @@ error(message [, level])
 ```
 
 Lua中处理错误，可以使用函数`pcall(protected call, ...)`来包装需要执行的代码。pcall接收一个函数和要传递给后者的参数，并执行，执行结果：有错误、无错误哦，返回值为true、false或errorinfo。  
-```lua
+```lua  
 if pcall(function_name, ….) then
 -- 没有错误
 else
 -- 一些错误
 end
-```  
+```
 
 `xpcall(protected call, error handler, ..)`函数接收的第二个参数是一个错误处理函数，错误发生时Lua在调用栈展开前调用错误处理函数。  
 + `debug.debug`  
-  提供一个Lua提示符，供用户来检查错误的原因。
+  提供一个Lua提示符，供用户来检查错误的原因。  
 + `debug.traceback`  
   根据调用栈来构建一个扩展的错误信息。
+
+---
+# 垃圾回收
+Lua采用了自动内存管理，意味着开发者不用管理新创建对象的内存分配，以及对象不再被使用后释放内存的问题。  
+Lua运行了一个**垃圾收集器**来收集所有*死对象*（即在Lua中不可再访问到的对象）来完成自动内存管理的工作。  
+Lua的垃圾收集器实现为**增量标记-扫描收集器**，通过**垃圾收集器间歇率**和**垃圾收集器步进倍率**来控制垃圾收集循环，单位都是百分数。  
+
+垃圾回收器函数  
+| 函数 | 描述 |
+| :--: | :--: |
+| `collectgarbage("collect")` | 做一次完整的垃圾收集循环，通过参数opt提供了一组不同的功能。 |
+| `collectgarbage("count")` | 以K字节数为单位返回Lua使用的总内存数，存在小数部分。 |
+| `collectgarbage("restart")` | 重启垃圾收集器的自动运行。 |
+| `collectgarbage("setpause")` | 将arg设为收集器的间歇率，返回间歇率的前一个值。 |
+| `collectgarbage("setstepmul")` | 返回步进倍率的前一个值。 |
+| `collectgarbage("step")` | 单步运行垃圾收集器，步长大小由arg控制。 |
+| `collectgarbage("stop")` | |
+
+---
+# Lua面向对象
+
+#### 面向对象特征
++ **封装**  
+  指能够把一个实体的信息、功能、响应都装入一个单独的对象中的特性
++ **继承**  
+  继承的方法允许在不改动原程序的基础上对其进行扩充，这样使得原功能得以保存，而新功能也得以扩展。这有利于减少重复编码，提高软件的开发效率。  
++ **多态**  
+  同一操作作用于不同的对象，可以有不同的解释，产生不同的执行结果。在运行时，可以通过指向基类的指针，来调用实现派生类中的方法。
++ **抽象**  
+  抽象(Abstraction)是简化复杂的现实问题的途径，它可以为具体问题找到最恰当的类定义，并且可以在最恰当的继承级别解释问题。  
+
+#### Lua中面向对象
+对象由属性和方法组成。Lua中用table来描述对象的属性，`function`可以用来表示方法。Lua中的类通过table+function模拟。  
+
+```lua
+-- 元类
+Rectangle = {area = 0, length = 0, breadth = 0}
+
+-- 派生类的方法 new
+function Rectangle:new (o,length,breadth)
+  o = o or {}
+  setmetatable(o, self)
+  self.__index = self
+  self.length = length or 0
+  self.breadth = breadth or 0
+  self.area = length*breadth;
+  return o
+end
+
+-- 派生类的方法 printArea
+function Rectangle:printArea ()
+  print("矩形面积为 ",self.area)
+end
+```
+
+
 
 
 
