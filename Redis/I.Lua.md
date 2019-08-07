@@ -515,7 +515,7 @@ Lua的垃圾收集器实现为**增量标记-扫描收集器**，通过**垃圾�
 ---
 # Lua面向对象
 
-#### 面向对象特征
+## 面向对象特征
 + **封装**  
   指能够把一个实体的信息、功能、响应都装入一个单独的对象中的特性
 + **继承**  
@@ -525,15 +525,15 @@ Lua的垃圾收集器实现为**增量标记-扫描收集器**，通过**垃圾�
 + **抽象**  
   抽象(Abstraction)是简化复杂的现实问题的途径，它可以为具体问题找到最恰当的类定义，并且可以在最恰当的继承级别解释问题。  
 
-#### Lua中面向对象
-对象由属性和方法组成。Lua中用table来描述对象的属性，`function`可以用来表示方法。Lua中的类通过table+function模拟。  
+## Lua中面向对象
+对象由属性和方法组成。Lua中用`table`来描述对象的属性，`function`可以用来表示方法。Lua中的类通过table+function模拟。  
 
 ```lua
 -- 元类
 Rectangle = {area = 0, length = 0, breadth = 0}
 
 -- 派生类的方法 new
-function Rectangle:new (o,length,breadth)
+function Rectangle:new(o,length,breadth)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
@@ -544,14 +544,54 @@ function Rectangle:new (o,length,breadth)
 end
 
 -- 派生类的方法 printArea
-function Rectangle:printArea ()
+function Rectangle:printArea()
   print("矩形面积为 ",self.area)
 end
 ```
+ #### 创建对象  
+```lua
+r = Rectangle:new(nil, 10, 20)
+```
 
+#### 访问属性
+```lua
+print(r.length)
+```
+#### 访问成员函数
+```lua
+r:printArea()
+```
 
+## Lua继承
+继承是指一个对象直接使用另一个对象的属性和方法，可用于扩展基础类的属性和方法。  
 
+```lua
+-- Meta class
+Shape = {area = 0}
+-- 基础类方法 new
+function Shape:new(o,side)
+  o = o or {}
+  setmetatable(o, self)
+  self.__index = self
+  side = side or 0
+  self.area = side*side;
+  return o
+end
+-- 基础类方法 printArea
+function Shape:printArea()
+  print("面积为 ",self.area)
+end
 
+-- Square继承了Shape类
+Square = Shape:new()
+-- Derived class method new
+function Square:new(o,side)
+  o = o or Shape:new(o,side)
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+```
 
 
 
