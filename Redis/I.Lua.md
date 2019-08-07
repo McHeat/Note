@@ -1,4 +1,4 @@
-``# Lua学习
+# Lua学习
 
 ## Mac Os X系统安装
 ```bash
