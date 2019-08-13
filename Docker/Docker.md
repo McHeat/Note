@@ -1,5 +1,15 @@
 # Docker
 
+## Docker核心概念与安装配置
+
+### 核心概念
++ Docker镜像  
+  Docker镜像类似于虚拟机镜像，可以将它理解为一个只读的模板。镜像是创建Docker容器的基础。  
++ Docker容器  
+  Docker容器类似于一个轻量级的沙箱，Docker利用容器来运行和隔离应用。容器是从镜像创建的应用运行实例。  
++ Docker仓库  
+  Docker容器类似于代码仓库，是Docker集中存放镜像文件的场所。  
+
 ### 一、Docker架构详解
  Docker的核心组件包括：
  + Docker客户端 - Client
@@ -9,7 +19,8 @@
  + Docker容器 - Container
  
  Docker采用的是Client/Server架构，客户端向服务器发送请求，服务器负责构建、运行和分发容器。
- 客户端和服务器可以运行在同一个Host上，客户端也可通过socket或REST API与远程的服务器通信。
+ 客户端和服务器可以运行在同一个Host上，客户端也可通过socket或REST API与远程的服务器通信。  
+
 #### 1、Docker客户端
  最常用的Docker客户端是`docker`命令，可方便地在Host上构建和运行容器。  
  除了`docker`命令行工具，用户也可以通过REST API与服务器通信。
