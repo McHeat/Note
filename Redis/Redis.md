@@ -7,29 +7,28 @@
  ```
  redis-server.exe redis.windows.conf 	# 服务器
  redis-cli.exe -h 127.0.0.1 -p 6379		# 客户端
- ```  
-
+ ```
  Linux
-```
+ ```
  ./redis-server redis.conf				# 服务器
  ./redis-cli							# 客户端 
-```  
-
+ ```
+ 
 ## Redis入门
 
 ### 二、配置
- 1. 配置文件位于Redis安装目录下，文件名为redis.conf  
+ 1. 配置文件位于Redis安装目录下，文件名为`redis.conf` 
  2. CONFIG命令可查看或设置配置项  
-   获取配置：CONFIG GET CONFIG_SETTING_NAME  
-   编辑配置：CONFIG SET CONFIG_SETTING_NAME NEW_CONFIG_VALUE  
+   获取配置：`CONFIG GET [CONFIG_SETTING_NAME]`  
+   编辑配置：`CONFIG SET [CONFIG_SETTING_NAME] [NEW_CONFIG_VALUE]`  
  3. 配置参数请参照api
  
 ### 三、数据类型
- String(字符串)、Hash(哈希)、List(列表)、Set(集合)、Zset(有序集合)
+ Redis支持五种数据类型：`String`(字符串)、`Hash`(哈希)、`List`(列表)、`Set`(集合)、`Zset`(有序集合)。
 
 ### 四、命令
- redis-cli 连接本地redis服务
- redis-cli -h host -p port -a password	连接远程redis服务
+ `redis-cli` 连接本地redis服务  
+ `redis-cli -h host -p port -a password` 连接远程redis服务. 
 ### 五、 键(key)
  `DEL key`		    删除存在的key  
  `DUMP key`	        序列化给定key并返回  
