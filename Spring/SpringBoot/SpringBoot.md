@@ -114,3 +114,12 @@ dependencies {
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 ```
+
+## 二、Configuration类
++ SpringBoot提倡使用java-based配置  
+  通常，定义了main方法的类也是主要@Configuartion的首选。
++ 引入更多的configuration类  
+  通过@Import注解可引入额外的configuration类。  
+  可使用@ComponentScan来自动注册所有的Spring组件，包括@Configuration类。
++ 引入XML配置  
+  通过@ImportResource注解来加载XML配置文件。
