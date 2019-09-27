@@ -207,12 +207,12 @@ exception可实现ExitCodeGenerator接口。当遇到异常时，SpringBoot会�
 ### 8. Admin特性
 通过设置`spring.application.admin.enabled`属性，可开启相关管理特性。这会暴露MBeanServer平台的`SpringApplicationAdminMXBean`，从而可以远程管理Spring Boot应用。  
     
-配置外部化
-    |-- 可使用properties文件、yaml文件、环境变量和命令行参数使配置外部化。
-    |-- Property值的使用方法：
-    |       1.可通过@Value注解直接注入到bean中，
-    |       2.可通过spring的Environment抽象类使用，
-    |       3.可通过@ConfigurationProperties绑定到结构化对象
+## 六、配置外部化
+Spring Boot应用可使用properties文件、yaml文件、Environment变量和命令行参数实现配置外部化。Property值可通过以下方式使用：
++ 通过@Value注解直接注入到bean中
++ 通过spring的Environment使用
++ 可通过@ConfigurationProperties绑定到结构化对象
+
     |-- PropertySource的优先级：
     |   |-- home文件目录里的devtools全局设置properties（~/.spring-boot-devtools.properties）
     |   |-- 测试类的@TestPropertySource注解
