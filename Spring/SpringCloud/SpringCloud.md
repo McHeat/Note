@@ -37,10 +37,20 @@ bootstrap上下文与主应用上下文使用的读取外部配置的约定不�
 
 值得注意的是，`SpringApplicationBuilder`允许在上下文层级结构中共享同一个`Environment`，但这不是默认项。因此，兄弟向下文中不一定有相同的profile或属性源，即使他们可以共享父上下文的共同属性值。  
 
+### 3.3 修改Bootstrap属性的位置
+通过`spring.cloud.bootstrap.name`（默认值:bootstrap）和`spring.cloud.bootstrap.location`（默认值:空）可指定`bootstrap.yml`的位置，其中的属性是以`spring.config.*`为名称的变量值，这些属性会添加到`Environment`中以用于设置bootstrap上下文。  
 
+### 3.4 覆盖远程属性值
+bootstrap上下文添加到应用中的属性源一般是远程的，比如通过`Spring Cloud Config Server`。默认地，它们是无法被本地覆盖的。如果需要使用应用的系统属性或本地配置文件覆盖远程属性，**远程属性源**必须通过设置`spring.cloud.config.allowOverride=true`属性来授权（本地设置该属性无效）。一旦设置了该标志，两个属性可以更好地控制关联远程属性值的系统属性和应用本地配置：  
++ `spring.cloud.config.overrideNone=true`  
+  从任何本地属性源覆盖远程属性值。
++ `spring.cloud.config.overrideSystemProperties=false`  
+  只有系统属性、命令行属性和环境属性可以覆盖远程属性值。  
 
+### 3.5 自定义bootstrap配置
+通过在`/META-INF/spring.factories`文件中添加名为`org.springframework.cloud.bootstrap.BootstrapConfiguration`实例，bootstrap上下文可根据需要做相应的事情。这个配置会持有一个用于创建上下文的`@Configuration`类的列表。用于主应用上下文装载bean也可以在这里创建，尤其是`ApplicationContextInitializer`类型的bean。通过标记`@Order`可控制类的启动顺序。
 
-
+> 在添加自定义`BootstrapConfiguration`，注意保证这些类不会被`@ComponentScan`扫描而误添加到可能根本不需要这些类的主应用上下文中。将启动配置类放在不同的包路径下并确保这些类不会被`@ComponentScan`或`@SpringBootApplication`覆盖到。  
 
 
 
