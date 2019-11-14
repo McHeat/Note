@@ -12,11 +12,55 @@ Spring Cloud主要用于对典型的用户场景和可扩展机制提供良好�
 
 ## 二、云原生应用(Cloud Native Applications)
  云原生是一种应用开发方式，提倡采用持续交付(Continuous Delivery，CD)和价值驱动(Value-driven)开发领域的最优体验。一个相关原则是[12要素(12-factor App)](https://www.cnblogs.com/wintersun/p/11026557.html)。在12要素中，开发实践主要分配在交付和操作目的，比如使用声明式编程、管理和监控等。
- Spring Cloud在许多领域使用这种开发方式，首先从在分布式系统中所有组件需要或容易用到的一系列特性。在使用SpringCloud创建的SpringBoot应用中，这些特性的大多数都已覆盖到。其他特性包括在Spring Cloud发布的两个library中：Spring Cloud Context和Spring Cloud Commons。
+ Spring Cloud在许多领域使用这种开发方式，首先从在分布式系统中所有组件需要或容易用到的一系列特性。这些特性的大多数在SpringBoot应用中已覆盖到，而SpringBoot同时是SpringCloud的基础。其他特性在SpringCloud发布的两个library中涉及：`Spring Cloud Context`和`Spring Cloud Commons`。
 - [Spring Cloud Context](https://github.com/McHeat/Note/blob/master/SpringCloud/SpringCloudContext.md)  
- 为应用的ApplicationContext提供功能和定制服务，包括引导context、加密、刷新域和环境端点。
+ 为应用的ApplicationContext提供功能和定制服务，包括引导上下文、加密、刷新域和环境端点。
 - Spring Cloud Commons  
  提供了一套抽象类和不同Spring Cloud实现使用的公共类(如Spring Cloud Netflix和Spring Cloud Consul)。
 
-如果获取到Illegal key size原因的异常，并且使用的sunJdk时，需要安装Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy文件(JDK/jre/lib/security路径)。
+如果获取到`Illegal key size`原因的异常，并且使用的sunJdk时，需要安装Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy文件(JDK/jre/lib/security路径)。
+
+## 三、Spring Cloud Context:应用上下文服务
+
+### 3.1 应用启动上下文
+SpringCloud启动时会创建一个启动上下文(Bootstrap Context)，这个上下文作为主应用上下文（main application context）的父级上下文，主要负责加载并解码外部配置。两个上下文共享同一个`Environment`。默认地，启动属性（不是`bootstrap.properties`文件中的属性，而是在启动阶段加载的属性）有较高的优先级，无法被本地属性覆盖。  
+bootstrap上下文与主应用上下文使用的读取外部配置的约定不同。所以通过使用`bootstrap.yml`代替`application.yml`来拆分启动上下文和主应用上下文的外部属性。  
+通过设置`spring.cloud.bootstrap.enabled=false`可直接禁用bootstrap进程。
+
+### 3.2 应用上下文层级
+当通过`SpringApplication`或`SpringApplicationBuilder`创建应用上下文时，会额外创建一个Bootstrap上下文作为当前创建上下文的父级上下文。Spring有一个特性：子上下文会继承父上下文的属性源和profile。相比于那些没有通过`Spring Cloud Config`创建的主应用上下文，这些主应用上下文会包含额外的属性源：  
++ `bootstrap`：如果bootstrap上下文中包含`PropertySourceLocators`且其中的属性不为空，会创建一个高优先级的`CompositePropertySource`。例如，通过`Spring Cloud Config Server`获取到的属性。
++ `applicationConfig:[classpath:bootstrap.yml]`：`bootstrap.yml`中的属性会用于配置Bootstrap上下文，设置父级上下文后会传递给子上下文。这些属性的优先级会低于`application.yml`和子上下文中添加的其他的PropertySource。  
+> `bootstrap`实体中的属性有很高的优先级，而`bootstrap.yml`文件中的属性优先级很低，可用作配置默认值。  
+
+通过创建自定义的ApplicationContext并设置其父级上下文（比如通过使用`SpringApplicationBuilder`的`parent()`、`child()`、`subling()`方法）可以扩展上下文的层级。`bootstrap`上下文是所有自定义上下文的父级，层级结构中的每个上下文都有一个自己的`bootstrap`属性源，这可以避免意外地将父级中的属性传递到后代中。在`Config Server`中，层级结构中的每个上下文原则上都有一个不同的`spring.application.name`并对应不同的远程属性源。Spring中应用上下文的行为准则也适用于属性源：子上下文中的属性值会通过属性名称或属性源名称覆盖父属性源中对应的属性值。（如果子上下文中属性源的名字与父上下文中的一致，则父上下文中的属性源不会被加到子上下文中）。  
+
+值得注意的是，`SpringApplicationBuilder`允许在上下文层级结构中共享同一个`Environment`，但这不是默认项。因此，兄弟向下文中不一定有相同的profile或属性源，即使他们可以共享父上下文的共同属性值。  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
