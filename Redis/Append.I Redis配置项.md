@@ -70,8 +70,7 @@ LRU-最近最少使用；LFU-最近最不频繁使用 |
 | 追加模式 |  |  |
 | `appendonly` | `appendonly no` | 是否启动追加模式，`yes`为启动。AOF与RDB可同时启动。 |
 | `appendfilename` | `appendfilename "appendonly.aof"` | AOF文件名称。 |
-| `appendfsync` | `appendfsync everysec` | `fsync()`会命令OS将数据立即写入到硬盘，该配置项决定`fsync`的策略：`no`：不执行fsync，由OS决定何时flush，较快。`everysec`：每秒执行一次fsync，速度和安全的折中。`always`：当aof文件有任何的写入时执行fsync，速度慢但最安全。
- |
+| `appendfsync` | `appendfsync everysec` | `fsync()`会命令OS将数据立即写入到硬盘，该配置项决定`fsync`的策略：`no`：不执行fsync，由OS决定何时flush，较快。`everysec`：每秒执行一次fsync，速度和安全的折中。`always`：当aof文件有任何的写入时执行fsync，速度慢但最安全。|
 | `no-appendfsync-on-rewrite` | `no-appendfsync-on-rewrite no` | 在`BGSAVE`或`BGREWRITEAOF`执行时，是否阻止主线程调用`fsync()`。 |
 | `auto-aof-rewrite-percentage`
 `auto-aof-rewrite-min-size` | `auto-aof-rewrite-percentage 100`
