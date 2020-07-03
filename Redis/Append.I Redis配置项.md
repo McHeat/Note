@@ -1,8 +1,5 @@
 # Redis配置项
 
-
-
-
 | 名称 | 示例 | 描述 |
 | :---: | :---: | :---: |
 | 引入文件 |  |  |
@@ -30,9 +27,7 @@
 | `databases` | `databases 16` | 设置数据库的数量。默认数据库是0。`SELECT <dbid>`来选择数据库。 |
 | `always-show-logo` | `always-show-logo yes` | 总是打印logo，而不限于TTY。 |
 | 快照 |  |  |
-| `save <seconds> <changes>` | `save 900 1`
-`save 300 10`
-`save 60 10000` | 保存数据到硬盘上，当指定的秒数和写操作数达到标准时保存数据库。 |
+| `save <seconds> <changes>` | `save 900 1` `save 300 10` `save 60 10000` | 保存数据到硬盘上，当指定的秒数和写操作数达到标准时保存数据库。 |  
 | `stop-writes-on-bgsave-error` | `stop-writes-on-bgsave-error yes` | 默认地，在RDB快照开启且最后一次后台保存失败时会停止接受写操作。 |
 | `rdbcompression` | `rdbcompression yes` | 在`dump.rdb`文件中通过LZF压缩字符串类型。默认开启，如果想节约CPU资源可关闭。 |
 | `rdbchecksum` | `rdbchecksum yes` | 是否检测文件末尾的CRC64校验和，判断文件是否损坏。未开启检验时会保存一个零值提示跳过校验。 |
@@ -41,10 +36,7 @@
 | 主从复制 |  |  |
 | `replicaof` | `replicaof <masterip> <masterport>` | 作为指定Redis服务器的复制。异步复制、部分重同步、自动复制。 |
 | `masterauth` | `masterauth <master-password>` | 设置Redis主服务器的连接密码。 |
-| `replica-serve-stale-data` | `replica-serve-stale-data yes` | 当复制服务器与主服务器断开连接时，或复制进程未结束时：
-- 设置为`yes`则会继续响应客户端请求，可能数据已过期或为空（初次同步时）
-- 设置为`no`则响应错误信息"SYNC with master in progress"（非数据类型命令除外）
- |
+| `replica-serve-stale-data` | `replica-serve-stale-data yes` | 当复制服务器与主服务器断开连接时，或复制进程未结束时：设置为`yes`则会继续响应客户端请求，可能数据已过期或为空（初次同步时）;设置为`no`则响应错误信息"SYNC with master in progress"（非数据类型命令除外） |
 | `replica-read-only` | `replica-read-only yes` | 设置复制服务器是否接受写命令，从2.6开始默认只读。 |
 | `replica-priority` | `replica-priority 100` | 用于在主服务器失效时从复制服务器中选举新的主服务器。较小值的复制服务器会被选为主服务器。零值复制服务器不会被选为主服务器。 |
 | `repl-diskless-sync` | `repl-diskless-sync no` | 复制服务器的同步策略：disk或socket（试验性阶段）。新的复制服务器或重新连接但无法恢复同步的复制服务器需要进行全量同步。RDB文件会从主服务器传输到复制服务器，两种传输方式为：
