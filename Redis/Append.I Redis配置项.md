@@ -39,10 +39,7 @@
 | `replica-serve-stale-data` | `replica-serve-stale-data yes` | 当复制服务器与主服务器断开连接时，或复制进程未结束时：设置为`yes`则会继续响应客户端请求，可能数据已过期或为空（初次同步时）;设置为`no`则响应错误信息"SYNC with master in progress"（非数据类型命令除外） |
 | `replica-read-only` | `replica-read-only yes` | 设置复制服务器是否接受写命令，从2.6开始默认只读。 |
 | `replica-priority` | `replica-priority 100` | 用于在主服务器失效时从复制服务器中选举新的主服务器。较小值的复制服务器会被选为主服务器。零值复制服务器不会被选为主服务器。 |
-| `repl-diskless-sync` | `repl-diskless-sync no` | 复制服务器的同步策略：disk或socket（试验性阶段）。新的复制服务器或重新连接但无法恢复同步的复制服务器需要进行全量同步。RDB文件会从主服务器传输到复制服务器，两种传输方式为：
-- disk-backed：主服务器创建一个新进程将RDB文件写入到硬盘，然后通过父进程增量地传输给复制服务器。
-- diskless：主服务器创建一个新进程，直接将RDB文件传输给复制服务器端口，而不会操作硬盘。
- |
+| `repl-diskless-sync` | `repl-diskless-sync no` | 复制服务器的同步策略：disk或socket（试验性阶段）。新的复制服务器或重新连接但无法恢复同步的复制服务器需要进行全量同步。RDB文件会从主服务器传输到复制服务器，两种传输方式为：`disk-backed`：主服务器创建一个新进程将RDB文件写入到硬盘，然后通过父进程增量地传输给复制服务器。`diskless`：主服务器创建一个新进程，直接将RDB文件传输给复制服务器端口，而不会操作硬盘。 |
 | `repl-diskless-sync-delay` | `repl-diskless-sync-delay 5` | 当使用diskless复制模式时，配置主服务器延迟秒数来等待更多的复制服务器连接。 |
 | `repl-ping-replica-period` | `repl-ping-replica-period 10` | 复制服务器按照预定义的间隔发送PING命令。该命令修改PING的间隔。 |
 | `repl-timeout` | `repl-timeout 60` | 设置复制服务器的超时时间。该值应大于`repl-ping-replica-period`的值。 |
@@ -52,9 +49,7 @@
 | `min-replicas-to-write`
 `min-replicas-max-lag` | `min-replicas-to-write 3`
 `min-replicas-max-lag 10` | 设置主服务器在少于N个复制服务器连接或复制服务器延迟间隔小于等于M秒时，主服务器停止接受写操作。 |
-| `replica-announce-ip`
-`replica-announce-port` | `replica-announce-ip 5.5.5.5`
-`replica-announce-port 1234` | 复写复制服务器对外展示的ip和端口。 |
+| `replica-announce-ip` `replica-announce-port` | `replica-announce-ip 5.5.5.5` `replica-announce-port 1234` | 复写复制服务器对外展示的ip和端口。 |
 | 安全性 |  |  |
 | `requirepass` | `requirepass foobared` | 设置客户端执行其他命令前的密码`AUTH <PASSWORD>`。 |
 | `rename-command` | `rename-command CONFIG ""` | 重新命名命令，将比较危险的命令修改成其他比较难以猜测的名称。 |
@@ -63,15 +58,7 @@
 | 内存管理 |  |  |
 | `maxmemory` | `maxmemory <bytes>` | 限定内存大小。当达到内存限制时，Redis会根据驱逐策略移除一部分key。如果无法移除，或策略为`noeviction`，REDIS会响应失败消息，读取命令依然生效。 |
 | `maxmemory-policy` | `maxmemory-policy noeviction` | 设置键驱逐策略，可选项为：
-- `volatile-lru`
-- `allkeys-lru`
-- `volatile-lfu`
-- `allkeys-lfu`
-- `volatile-random`
-- `allkeys-random`
-- `volatile-ttl`
-- `noeviction`
-
+`volatile-lru`; `allkeys-lru`; `volatile-lfu`; `allkeys-lfu`; `volatile-random`; `allkeys-random`; `volatile-ttl`; `noeviction`。
 LRU-最近最少使用；LFU-最近最不频繁使用 |
 | `maxmemory-samples` | `maxmemory-samples 5` | 计算键驱逐策略时的取样大小。 |
 | `replica-ignore-maxmemory` | `replica-ignore-maxmemory yes` | 在Redis5中，默认地复制服务器会忽略最大内存限制，键驱逐仅在主服务器上进行处理，然后向复制服务器发送被驱逐键的`DEL`命令。 |
@@ -83,10 +70,7 @@ LRU-最近最少使用；LFU-最近最不频繁使用 |
 | 追加模式 |  |  |
 | `appendonly` | `appendonly no` | 是否启动追加模式，`yes`为启动。AOF与RDB可同时启动。 |
 | `appendfilename` | `appendfilename "appendonly.aof"` | AOF文件名称。 |
-| `appendfsync` | `appendfsync everysec` | `fsync()`会命令OS将数据立即写入到硬盘，该配置项决定`fsync`的策略：
-- `no`：不执行fsync，由OS决定何时flush，较快。
-- `everysec`：每秒执行一次fsync，速度和安全的折中。
-- `always`：当aof文件有任何的写入时执行fsync，速度慢但最安全。
+| `appendfsync` | `appendfsync everysec` | `fsync()`会命令OS将数据立即写入到硬盘，该配置项决定`fsync`的策略：`no`：不执行fsync，由OS决定何时flush，较快。`everysec`：每秒执行一次fsync，速度和安全的折中。`always`：当aof文件有任何的写入时执行fsync，速度慢但最安全。
  |
 | `no-appendfsync-on-rewrite` | `no-appendfsync-on-rewrite no` | 在`BGSAVE`或`BGREWRITEAOF`执行时，是否阻止主线程调用`fsync()`。 |
 | `auto-aof-rewrite-percentage`
