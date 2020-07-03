@@ -57,8 +57,7 @@
 | `maxclients` | `maxclients 10000` | 设置同一时间连接的客户端的最大数量。 |
 | 内存管理 |  |  |
 | `maxmemory` | `maxmemory <bytes>` | 限定内存大小。当达到内存限制时，Redis会根据驱逐策略移除一部分key。如果无法移除，或策略为`noeviction`，REDIS会响应失败消息，读取命令依然生效。 |
-| `maxmemory-policy` | `maxmemory-policy noeviction` | 设置键驱逐策略，可选项为：
-`volatile-lru`; `allkeys-lru`; `volatile-lfu`; `allkeys-lfu`; `volatile-random`; `allkeys-random`; `volatile-ttl`; `noeviction`。
+| `maxmemory-policy` | `maxmemory-policy noeviction` | 设置键驱逐策略，可选项为：`volatile-lru`; `allkeys-lru`; `volatile-lfu`; `allkeys-lfu`; `volatile-random`; `allkeys-random`; `volatile-ttl`; `noeviction`。
 LRU-最近最少使用；LFU-最近最不频繁使用 |
 | `maxmemory-samples` | `maxmemory-samples 5` | 计算键驱逐策略时的取样大小。 |
 | `replica-ignore-maxmemory` | `replica-ignore-maxmemory yes` | 在Redis5中，默认地复制服务器会忽略最大内存限制，键驱逐仅在主服务器上进行处理，然后向复制服务器发送被驱逐键的`DEL`命令。 |
