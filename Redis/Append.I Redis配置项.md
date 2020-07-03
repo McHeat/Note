@@ -46,9 +46,7 @@
 | `repl-disable-tcp-nodelay` | `repl-disable-tcp-nodelay no` | 禁止同步后的备份服务器TCP_NODELAY。设置`yes`则使用数量较小的TPC包和较小的带宽来发送数据到备份服务器，但会导致备份服务器数据更新的延迟；设置为`no`则备份服务器数据更新延迟减小但花费更多的带宽。 |
 | `repl-backlog-size` | `repl-backlog-size 1mb` | 设置备份服务器的积压大小。积压是在复制服务器断开连接时暂时存储复制数据的，当复制服务器重新连接时无需全量同步而只需要进行部分重同步。 |
 | `repl-backlog-ttl` | `repl-backlog-ttl 3600` | 主服务器一段时间后无复制服务器连接时，释放积压。单位秒。零值代表不释放积压。 |
-| `min-replicas-to-write`
-`min-replicas-max-lag` | `min-replicas-to-write 3`
-`min-replicas-max-lag 10` | 设置主服务器在少于N个复制服务器连接或复制服务器延迟间隔小于等于M秒时，主服务器停止接受写操作。 |
+| `min-replicas-to-write` `min-replicas-max-lag` | `min-replicas-to-write 3` `min-replicas-max-lag 10` | 设置主服务器在少于N个复制服务器连接或复制服务器延迟间隔小于等于M秒时，主服务器停止接受写操作。 |
 | `replica-announce-ip` `replica-announce-port` | `replica-announce-ip 5.5.5.5` `replica-announce-port 1234` | 复写复制服务器对外展示的ip和端口。 |
 | 安全性 |  |  |
 | `requirepass` | `requirepass foobared` | 设置客户端执行其他命令前的密码`AUTH <PASSWORD>`。 |
